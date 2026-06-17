@@ -1124,6 +1124,17 @@
       font-size: 14px;
     }
 
+    .result-review {
+      display: grid;
+      gap: 6px;
+    }
+
+    .result-review strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
     .rubric-list {
       display: grid;
       gap: 8px;
@@ -1474,6 +1485,70 @@
       overflow-wrap: anywhere;
     }
 
+    .mistake-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .mistake-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mistake-card {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbfd;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .mistake-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 10px;
+    }
+
+    .mistake-card-head strong {
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .mistake-card-head span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .mistake-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .mistake-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mistake-tag {
+      border-radius: 999px;
+      background: #edf2f7;
+      color: #425466;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -1577,6 +1652,7 @@
       .view-grid,
       .training-dashboard,
       .model-summary,
+      .mistake-summary,
       .coach-dimensions,
       .comparison-grid,
       .intro-points,
@@ -1924,6 +2000,12 @@
               <h3>目前診斷</h3>
               <div class="insight" id="diagnosis"></div>
             </section>
+
+            <section class="panel side-panel">
+              <h3>錯題復盤</h3>
+              <div class="mistake-summary" id="mistakeSummary"></div>
+              <div class="mistake-list" id="mistakeReview"></div>
+            </section>
           </div>
 
           <div class="workspace">
@@ -2106,6 +2188,8 @@
     const trainingSessionsKey = "question-gym-training-sessions";
     const activeTrainingKey = "question-gym-active-training";
     const trainingPreferencesKey = "question-gym-training-preferences";
+    const mistakeReviewKey = "question-gym-mistake-review";
+    const mistakeReviewLimit = 30;
     const trainingHistoryDisplayLimit = 7;
     const weeklyCycleDays = 7;
     const publicShareUrl = "https://iks9245.github.io/Questionsfactory/";
@@ -2651,6 +2735,7 @@
     let trainingSessions = loadTrainingSessions();
     let activeTraining = loadActiveTraining();
     let trainingPreferences = loadTrainingPreferences();
+    let mistakeReview = loadMistakeReview();
     let selectedLibraryIndex = 0;
 
     const els = {
@@ -2711,6 +2796,8 @@
       modelSummary: document.getElementById("modelSummary"),
       mastery: document.getElementById("mastery"),
       diagnosis: document.getElementById("diagnosis"),
+      mistakeSummary: document.getElementById("mistakeSummary"),
+      mistakeReview: document.getElementById("mistakeReview"),
       history: document.getElementById("history"),
       coachHistory: document.getElementById("coachHistory"),
       targetWeaknessBtn: document.getElementById("targetWeaknessBtn"),
@@ -2900,7 +2987,171 @@
       return output;
     }
 
+    function loadMistakeReview() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(mistakeReviewKey));
+        if (!Array.isArray(saved)) return [];
+        return saved.map(sanitizeMistakeReviewItem).filter(Boolean).slice(0, mistakeReviewLimit);
+      } catch {
+        return [];
+      }
+    }
+
+    function saveMistakeReview() {
+      localStorage.setItem(mistakeReviewKey, JSON.stringify(mistakeReview.slice(0, mistakeReviewLimit)));
+    }
+
+    function sanitizeMistakeReviewItem(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      const causeKeys = Array.isArray(raw.causeKeys)
+        ? raw.causeKeys.filter((key) => dimensions.some((dimension) => dimension.key === key)).slice(0, 3)
+        : [];
+      if (!causeKeys.length) return null;
+      return {
+        id: asText(raw.id) || `mistake-${Date.now()}`,
+        at: asText(raw.at) || new Date().toISOString(),
+        type: raw.type === "coach" ? "coach" : "recognition",
+        title: asText(raw.title) || "未命名題目",
+        source: asText(raw.source) || (raw.type === "coach" ? "教練評估" : "辨識題"),
+        selectedText: asText(raw.selectedText),
+        bestText: asText(raw.bestText),
+        userRewrite: asText(raw.userRewrite),
+        score: clampInt(raw.score, 0, 100),
+        bestScore: clampInt(raw.bestScore, 0, 100),
+        causeKeys,
+        attraction: asText(raw.attraction),
+        recommendation: asText(raw.recommendation)
+      };
+    }
+
+    function addMistakeReviewRecord(record) {
+      const sanitized = sanitizeMistakeReviewItem(record);
+      if (!sanitized) return;
+      const fingerprint = `${sanitized.type}:${normalizeComparableText(sanitized.title)}:${sanitized.causeKeys.join(",")}:${normalizeComparableText(sanitized.selectedText || sanitized.userRewrite)}`;
+      mistakeReview = [
+        sanitized,
+        ...mistakeReview.filter((item) => {
+          const itemFingerprint = `${item.type}:${normalizeComparableText(item.title)}:${item.causeKeys.join(",")}:${normalizeComparableText(item.selectedText || item.userRewrite)}`;
+          return itemFingerprint !== fingerprint;
+        })
+      ].slice(0, mistakeReviewLimit);
+      saveMistakeReview();
+    }
+
+    function classifyChoiceGap(selected, bestChoice) {
+      return dimensions
+        .map((dimension) => {
+          const selectedValue = clampInt(selected?.dims?.[dimension.key], 0, 5);
+          const bestValue = clampInt(bestChoice?.dims?.[dimension.key], 0, 5);
+          return {
+            ...dimension,
+            selectedValue,
+            bestValue,
+            gap: bestValue - selectedValue
+          };
+        })
+        .filter((dimension) => dimension.gap > 0 || dimension.selectedValue <= 2)
+        .sort((a, b) => {
+          const aPriority = a.gap * 10 + Math.max(0, 3 - a.selectedValue);
+          const bPriority = b.gap * 10 + Math.max(0, 3 - b.selectedValue);
+          if (aPriority !== bPriority) return bPriority - aPriority;
+          return dimensions.findIndex((dimension) => dimension.key === a.key) - dimensions.findIndex((dimension) => dimension.key === b.key);
+        })
+        .slice(0, 2)
+        .map((dimension) => dimension.key);
+    }
+
+    function buildMistakeAttractionText(selected, bestChoice, causeKeys) {
+      const strongLabels = dimensions
+        .filter((dimension) => (selected?.dims?.[dimension.key] || 0) >= 4)
+        .map((dimension) => dimension.label)
+        .filter((label) => !getDimensionLabels(causeKeys).includes(label))
+        .slice(0, 2);
+      const causeText = getDimensionLabels(causeKeys).join("、") || "關鍵結構";
+      if (strongLabels.length) {
+        return `你可能被「${strongLabels.join("、")}」吸引；但它在「${causeText}」仍輸給最佳問題。`;
+      }
+      return `這個選項看起來有方向，但「${causeText}」不足，所以答案容易停在泛論或清單。`;
+    }
+
+    function buildMistakeRecommendation(causeKeys) {
+      const actionMap = {
+        purpose: "先補一句：我希望答案幫我做哪個判斷或產出什麼結果。",
+        context: "先補角色、場景、目前狀態與已知限制，讓回答能貼近現實。",
+        boundary: "加上時間、範圍、對象、資源或比較條件，讓問題不再散開。",
+        depth: "追問取捨、風險、反例、原因或代價，避免只得到表面說明。",
+        action: "把問題收束到下一步方案、指標、實驗或決策。",
+        assumption: "把你已經相信的前提寫出來，請回答者檢查它是否成立。"
+      };
+      return causeKeys.map((key) => actionMap[key]).filter(Boolean).join(" ");
+    }
+
+    function createRecognitionMistakeRecord({ lesson, selected, bestChoice }) {
+      const causeKeys = classifyChoiceGap(selected, bestChoice);
+      if (!causeKeys.length) return null;
+      return {
+        id: `recognition-${Date.now()}`,
+        at: new Date().toISOString(),
+        type: "recognition",
+        title: lesson.title,
+        source: "辨識題",
+        selectedText: selected.text,
+        bestText: bestChoice.text,
+        score: selected.score,
+        bestScore: bestChoice.score,
+        causeKeys,
+        attraction: buildMistakeAttractionText(selected, bestChoice, causeKeys),
+        recommendation: buildMistakeRecommendation(causeKeys)
+      };
+    }
+
+    function createCoachMistakeRecord(result, lesson, userRewrite, source) {
+      const weakDimensions = dimensions
+        .map((dimension) => ({
+          ...dimension,
+          score: clampInt(result.dimensions?.[dimension.key]?.score, 0, 5),
+          suggestion: asText(result.dimensions?.[dimension.key]?.suggestion)
+        }))
+        .filter((dimension) => dimension.score <= 3)
+        .sort((a, b) => {
+          if (a.score !== b.score) return a.score - b.score;
+          return dimensions.findIndex((dimension) => dimension.key === a.key) - dimensions.findIndex((dimension) => dimension.key === b.key);
+        })
+        .slice(0, 2);
+
+      if ((result.overallScore || 0) >= 82 && !weakDimensions.length) return null;
+      const causeKeys = weakDimensions.length
+        ? weakDimensions.map((dimension) => dimension.key)
+        : [dimensions.slice().sort((a, b) => {
+            const aScore = clampInt(result.dimensions?.[a.key]?.score, 0, 5);
+            const bScore = clampInt(result.dimensions?.[b.key]?.score, 0, 5);
+            return aScore - bScore;
+          })[0]?.key].filter(Boolean);
+      if (!causeKeys.length) return null;
+
+      const suggestionText = weakDimensions
+        .map((dimension) => dimension.suggestion)
+        .filter(Boolean)
+        .join(" ");
+
+      return {
+        id: `coach-${Date.now()}`,
+        at: new Date().toISOString(),
+        type: "coach",
+        title: lesson.title,
+        source,
+        userRewrite,
+        score: result.overallScore,
+        bestScore: 100,
+        causeKeys,
+        attraction: `這次改寫的主要短板集中在「${getDimensionLabels(causeKeys).join("、")}」。`,
+        recommendation: suggestionText || buildMistakeRecommendation(causeKeys)
+      };
+    }
+
     function addCoachHistoryRecord(result, lesson, userRewrite, source) {
+      const mistakeRecord = createCoachMistakeRecord(result, lesson, userRewrite, source);
+      if (mistakeRecord) addMistakeReviewRecord(mistakeRecord);
       coachHistory.unshift({
         at: new Date().toISOString(),
         title: lesson.title,
@@ -3617,6 +3868,7 @@
       const lesson = lessons[currentIndex];
       const best = bestChoiceIndex(lesson);
       const selected = lesson.choices[selectedIndex];
+      const bestChoice = lesson.choices[best];
       const correct = selectedIndex === best;
 
       checked = true;
@@ -3639,6 +3891,10 @@
       });
       stats.history = stats.history.slice(0, 6);
       saveStats();
+      if (!correct) {
+        const mistakeRecord = createRecognitionMistakeRecord({ lesson, selected, bestChoice });
+        if (mistakeRecord) addMistakeReviewRecord(mistakeRecord);
+      }
       recordTrainingRecognition({ lesson, selected, correct });
 
       renderChoices();
@@ -3649,9 +3905,25 @@
     function renderFeedback(lesson, selected, correct, best) {
       const bestChoice = lesson.choices[best];
       els.resultTitle.textContent = correct ? "判斷正確" : "這題可以再精準一點";
-      els.resultText.textContent = correct
-        ? `${lesson.explanation} ${selected.note}`
-        : `你選的問題分數是 ${selected.score}。${selected.note} 最佳選項是「${bestChoice.text}」：${lesson.explanation}`;
+      if (correct) {
+        els.resultText.className = "";
+        els.resultText.textContent = `${lesson.explanation} ${selected.note}`;
+      } else {
+        const review = createRecognitionMistakeRecord({ lesson, selected, bestChoice });
+        els.resultText.className = "result-review";
+        els.resultText.innerHTML = "";
+        const scoreLine = document.createElement("span");
+        scoreLine.textContent = `你選的問題分數是 ${selected.score}。${selected.note}`;
+        const bestLine = document.createElement("span");
+        bestLine.textContent = `最佳選項是「${bestChoice.text}」：${lesson.explanation}`;
+        const reviewTitle = document.createElement("strong");
+        reviewTitle.textContent = "錯因復盤";
+        const reviewLine = document.createElement("span");
+        reviewLine.textContent = review
+          ? `${review.attraction} 下一步：${review.recommendation}`
+          : "下一步：重新比較四個選項在六個維度上的缺口。";
+        els.resultText.append(scoreLine, bestLine, reviewTitle, reviewLine);
+      }
 
       els.rubricList.innerHTML = "";
       dimensions.forEach((dimension) => {
@@ -3791,6 +4063,10 @@
         return [dimensions[firstIndex], dimensions[secondIndex]];
       }
 
+      const mistakeTargets = (profile.mistakeProfile?.top || [])
+        .map((item) => dimensions.find((dimension) => dimension.key === item.key))
+        .filter(Boolean);
+
       const ranked = profileDimensions
         .slice()
         .sort((a, b) => {
@@ -3799,6 +4075,12 @@
           if (aScore !== bScore) return aScore - bScore;
           return dimensions.findIndex((dimension) => dimension.key === a.key) - dimensions.findIndex((dimension) => dimension.key === b.key);
         });
+      if (mistakeTargets.length) {
+        const primary = mistakeTargets[seed % mistakeTargets.length];
+        const secondary = ranked.find((dimension) => dimension.key !== primary?.key)
+          || mistakeTargets.find((dimension) => dimension.key !== primary?.key);
+        return [primary, secondary].filter(Boolean).slice(0, 2);
+      }
       const weakPool = ranked.slice(0, Math.min(4, ranked.length));
       const primary = weakPool[seed % weakPool.length] || ranked[0];
       const secondaryPool = weakPool.filter((dimension) => dimension.key !== primary?.key);
@@ -3824,11 +4106,15 @@
       const evidence = profile.hasData
         ? `目前模型分 ${profile.overall}，證據量為辨識 ${profile.recognitionCount} 題、教練 ${profile.coachCount} 次。`
         : "目前資料還少，先用基礎題建立第一輪能力模型。";
-      return `${evidence} 今天先練「${names}」，採用${difficultyProfile.label}難度：${difficultyProfile.description} 安排題目：「${lesson.title}」。先做辨識，再改寫弱問題，最後交給 AI 教練評估。`;
+      const mistakeText = profile.mistakeProfile?.top?.length
+        ? `最近錯因偏向「${profile.mistakeProfile.top.map((dimension) => dimension.label).join("、")}」。`
+        : "";
+      return `${evidence}${mistakeText} 今天先練「${names}」，採用${difficultyProfile.label}難度：${difficultyProfile.description} 安排題目：「${lesson.title}」。先做辨識，再改寫弱問題，最後交給 AI 教練評估。`;
     }
 
     function pickTrainingLesson(profile, targetDimensions, date = new Date(), difficulty = qualityEngine.defaultDifficulty) {
       const targetKeys = targetDimensions.map((dimension) => dimension.key);
+      const mistakeKeys = (profile.mistakeProfile?.top || []).map((dimension) => dimension.key);
       const daySeed = getDaySeed(date);
       const targetDifficulty = normalizeDifficulty(difficulty);
       let bestIndex = currentIndex;
@@ -3847,7 +4133,11 @@
         const generatedBonus = lesson.generated ? 0.4 : 0;
         const lessonDifficulty = normalizeDifficulty(lesson.difficulty || inferLessonDifficulty(lesson));
         const difficultyMatch = lessonDifficulty === targetDifficulty ? 3.5 : -1.2;
-        const score = dimSpread * 2 + weakGap + generatedBonus + difficultyMatch + rotation;
+        const mistakeBonus = mistakeKeys.reduce((sum, key) => {
+          const values = lesson.choices.map((choice) => choice.dims?.[key] || 0);
+          return sum + (Math.max(...values) - Math.min(...values));
+        }, 0) * 1.4;
+        const score = dimSpread * 2 + weakGap + mistakeBonus + generatedBonus + difficultyMatch + rotation;
         if (score > bestScore) {
           bestScore = score;
           bestIndex = index;
@@ -4119,7 +4409,41 @@
       return `下一輪先練「${names}」。這是目前弱項與本週輪替後的交集，適合用一題辨識、一題改寫和一次教練評估快速校準。`;
     }
 
+    function buildMistakeProfile(records = mistakeReview) {
+      const recent = records.slice(0, mistakeReviewLimit);
+      const counts = Object.fromEntries(dimensions.map((dimension) => [dimension.key, 0]));
+      const latestByDimension = {};
+      recent.forEach((record) => {
+        record.causeKeys.forEach((key) => {
+          if (!Object.prototype.hasOwnProperty.call(counts, key)) return;
+          counts[key] += 1;
+          if (!latestByDimension[key]) latestByDimension[key] = record;
+        });
+      });
+      const ranked = dimensions
+        .map((dimension) => ({
+          ...dimension,
+          count: counts[dimension.key] || 0,
+          latest: latestByDimension[dimension.key] || null
+        }))
+        .filter((dimension) => dimension.count > 0)
+        .sort((a, b) => {
+          if (a.count !== b.count) return b.count - a.count;
+          return dimensions.findIndex((dimension) => dimension.key === a.key) - dimensions.findIndex((dimension) => dimension.key === b.key);
+        });
+
+      return {
+        count: recent.length,
+        recognitionCount: recent.filter((record) => record.type === "recognition").length,
+        coachCount: recent.filter((record) => record.type === "coach").length,
+        ranked,
+        top: ranked.slice(0, 2),
+        recent: recent.slice(0, 6)
+      };
+    }
+
     function buildAbilityProfile() {
+      const mistakeProfile = buildMistakeProfile();
       const dimensionProfiles = dimensions.map((dimension) => {
         const mastery = stats.mastery?.[dimension.key] || { total: 0, count: 0 };
         const recognitionScore = mastery.count ? Math.round((mastery.total / mastery.count) * 20) : null;
@@ -4160,7 +4484,9 @@
         strongest,
         recognitionCount: stats.roundsDone || 0,
         coachCount: coachHistory.length,
-        evidenceCount: (stats.roundsDone || 0) + coachHistory.length
+        evidenceCount: (stats.roundsDone || 0) + coachHistory.length,
+        mistakeProfile,
+        mistakeCount: mistakeProfile.count
       };
     }
 
@@ -4200,15 +4526,18 @@
       renderTrainingPath(profile);
       renderWeeklyCycle(profile);
       renderDiagnosis(avg, profile);
+      renderMistakeReview(profile);
       renderHistory();
     }
 
     function renderAbilityModel(profile) {
+      const mistakeTop = profile.mistakeProfile?.top || [];
       els.modelSummary.innerHTML = "";
       [
         ["模型分", profile.hasData ? `${profile.overall}` : "--"],
         ["最弱項", profile.weakest.map((dimension) => dimension.label).join(" / ")],
-        ["證據量", `${profile.recognitionCount} 題 / ${profile.coachCount} 評`]
+        ["證據量", `${profile.recognitionCount} 題 / ${profile.coachCount} 評`],
+        ["常犯錯因", mistakeTop.map((dimension) => dimension.label).join(" / ") || "--"]
       ].forEach(([label, value]) => {
         const chip = document.createElement("div");
         chip.className = "model-chip";
@@ -4504,11 +4833,22 @@
 
       const secondText = second ? `，次弱是「${second.label}」` : "";
       const evidenceText = `辨識 ${profile.recognitionCount} 題，教練 ${profile.coachCount} 次`;
-      els.diagnosis.innerHTML = `<strong>模型分 ${profile.overall}，最弱維度是「${weakest.label}」${secondText}</strong>${diagnosisMap[weakest.key]} 目前證據量：${evidenceText}。辨識題平均分 ${avg}。`;
+      const mistakeTop = profile.mistakeProfile?.top || [];
+      const mistakeText = mistakeTop.length
+        ? `最近錯因集中在「${mistakeTop.map((dimension) => dimension.label).join("、")}」，今日訓練會優先回補這些缺口。`
+        : "目前尚未累積錯題復盤，答錯或教練低分後會自動形成錯因。";
+      els.diagnosis.innerHTML = `<strong>模型分 ${profile.overall}，最弱維度是「${weakest.label}」${secondText}</strong>${diagnosisMap[weakest.key]} 目前證據量：${evidenceText}。辨識題平均分 ${avg}。${mistakeText}`;
     }
 
     function buildWeaknessTrainingTopic(profile = buildAbilityProfile()) {
-      const weak = profile.weakest.length ? profile.weakest : dimensions.slice(0, 2);
+      const mistakeFocus = profile.mistakeProfile?.top || [];
+      const mergedWeakKeys = [...mistakeFocus, ...(profile.weakest || [])]
+        .map((dimension) => dimension.key)
+        .filter((key, index, keys) => key && keys.indexOf(key) === index)
+        .slice(0, 2);
+      const weak = mergedWeakKeys.length
+        ? mergedWeakKeys.map((key) => dimensions.find((dimension) => dimension.key === key)).filter(Boolean)
+        : dimensions.slice(0, 2);
       const weakNames = weak.map((dimension) => dimension.label).join("、");
       const focusMap = {
         purpose: "讓使用者練習把問題連到明確判斷、決策或輸出目的",
@@ -4522,20 +4862,95 @@
       const evidenceText = profile.hasData
         ? `目前模型分 ${profile.overall}，證據量為辨識 ${profile.recognitionCount} 題、教練 ${profile.coachCount} 次。`
         : "目前尚未累積足夠紀錄，請先用基礎題校準使用者的六維能力。";
+      const mistakeText = mistakeFocus.length
+        ? `最近常犯錯因：${mistakeFocus.map((dimension) => `${dimension.label} ${dimension.count} 次`).join("、")}。請優先設計能讓使用者分辨這些錯因的題目。`
+        : "";
 
-      return `${evidenceText} 請生成一組問題力訓練題，專注訓練使用者最弱維度：${weakNames}。訓練重點：${focusLines}。題目要保持高干擾，四個選項長度接近，不能讓最佳答案靠字數或條件堆疊變明顯。`;
+      return `${evidenceText} ${mistakeText}請生成一組問題力訓練題，專注訓練使用者最弱維度：${weakNames}。訓練重點：${focusLines}。題目要保持高干擾，四個選項長度接近，不能讓最佳答案靠字數或條件堆疊變明顯。`;
     }
 
     async function generateWeaknessLessons() {
       switchAppView("library");
       const profile = buildAbilityProfile();
-      const weakNames = profile.weakest.map((dimension) => dimension.label).join("、") || "六維基礎";
+      const weakNames = (profile.mistakeProfile?.top?.length ? profile.mistakeProfile.top : profile.weakest)
+        .map((dimension) => dimension.label)
+        .join("、") || "六維基礎";
       els.topicInput.value = buildWeaknessTrainingTopic(profile);
       els.lessonCountInput.value = Math.max(10, getLessonCount());
       saveAiSettings();
       els.topicInput.scrollIntoView({ behavior: "smooth", block: "center" });
       setAiStatus(`已根據能力模型鎖定「${weakNames}」，正在準備生成弱項題庫...`);
       await generateLesson();
+    }
+
+    function renderMistakeReview(profile = buildAbilityProfile()) {
+      const mistakeProfile = profile.mistakeProfile || buildMistakeProfile();
+      els.mistakeSummary.innerHTML = "";
+      const topText = mistakeProfile.top.map((dimension) => dimension.label).join(" / ") || "--";
+      [
+        ["錯題", `${mistakeProfile.count}`],
+        ["辨識錯", `${mistakeProfile.recognitionCount}`],
+        ["教練低分", `${mistakeProfile.coachCount}`],
+        ["最高頻", topText]
+      ].forEach(([label, value]) => {
+        const chip = document.createElement("div");
+        chip.className = "model-chip";
+        const labelEl = document.createElement("span");
+        labelEl.textContent = label;
+        const valueEl = document.createElement("strong");
+        valueEl.textContent = value;
+        chip.append(labelEl, valueEl);
+        els.mistakeSummary.appendChild(chip);
+      });
+
+      els.mistakeReview.innerHTML = "";
+      if (!mistakeProfile.recent.length) {
+        const empty = document.createElement("div");
+        empty.className = "history-row";
+        const label = document.createElement("span");
+        label.textContent = "尚無錯題復盤";
+        const value = document.createElement("strong");
+        value.textContent = "0";
+        empty.append(label, value);
+        els.mistakeReview.appendChild(empty);
+        return;
+      }
+
+      mistakeProfile.recent.slice(0, 5).forEach((item) => {
+        const card = document.createElement("article");
+        card.className = "mistake-card";
+        const date = new Date(item.at);
+        const dateLabel = Number.isNaN(date.getTime())
+          ? "最近"
+          : date.toLocaleDateString("zh-Hant", { month: "2-digit", day: "2-digit" });
+        const head = document.createElement("div");
+        head.className = "mistake-card-head";
+        const title = document.createElement("strong");
+        title.textContent = item.title;
+        const score = document.createElement("span");
+        score.textContent = `${dateLabel} · ${item.score}`;
+        head.append(title, score);
+
+        const tags = document.createElement("div");
+        tags.className = "mistake-tags";
+        getDimensionLabels(item.causeKeys).forEach((label) => {
+          const tag = document.createElement("span");
+          tag.className = "mistake-tag";
+          tag.textContent = label;
+          tags.appendChild(tag);
+        });
+
+        const source = document.createElement("p");
+        source.textContent = item.type === "coach"
+          ? `來源：${item.source}。你的改寫：「${item.userRewrite || "未記錄"}」`
+          : `來源：${item.source}。你選了：「${item.selectedText}」`;
+        const reason = document.createElement("p");
+        reason.textContent = item.attraction;
+        const next = document.createElement("p");
+        next.textContent = `下一步：${item.recommendation}`;
+        card.append(head, tags, source, reason, next);
+        els.mistakeReview.appendChild(card);
+      });
     }
 
     function renderHistory() {
