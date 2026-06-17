@@ -1311,6 +1311,115 @@
       overflow-wrap: anywhere;
     }
 
+    .workshop-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .workshop-panel {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .workshop-form-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.78fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .workshop-form-grid .field:first-child {
+      grid-row: span 2;
+    }
+
+    .workshop-form-grid textarea {
+      min-height: 126px;
+    }
+
+    .workshop-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .workshop-result-panel {
+      display: none;
+    }
+
+    .workshop-result-panel.visible {
+      display: grid;
+      gap: 14px;
+    }
+
+    .workshop-upgrade-list,
+    .good-question-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .upgrade-card,
+    .good-question-card {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbfd;
+      padding: 12px;
+      text-align: left;
+      color: var(--ink);
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .upgrade-card {
+      cursor: pointer;
+    }
+
+    .upgrade-card.selected {
+      border-color: var(--teal);
+      background: #eff9f7;
+      box-shadow: inset 0 0 0 1px rgba(20, 125, 115, 0.16);
+    }
+
+    .upgrade-card-head,
+    .good-question-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .upgrade-card-head strong,
+    .good-question-head strong {
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .upgrade-card-head span,
+    .good-question-head span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .upgrade-card p,
+    .good-question-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .upgrade-question {
+      color: var(--ink) !important;
+      font-weight: 700;
+    }
+
     .coach-history-note {
       margin: -4px 0 10px;
       color: var(--muted);
@@ -1690,6 +1799,9 @@
       .weekly-layout,
       .view-grid,
       .training-dashboard,
+      .workshop-grid,
+      .workshop-form-grid,
+      .workshop-summary,
       .model-summary,
       .mistake-summary,
       .coach-dimensions,
@@ -1722,6 +1834,10 @@
       .path-step-state {
         grid-column: 2;
         justify-self: start;
+      }
+
+      .workshop-form-grid .field:first-child {
+        grid-row: auto;
       }
     }
   </style>
@@ -1758,6 +1874,7 @@
     <main class="main">
       <nav class="app-tabs" aria-label="Questionsfactory 視圖" role="tablist">
         <button class="view-tab active" id="tab-training" type="button" role="tab" aria-selected="true" aria-controls="view-training" data-view-target="training">訓練</button>
+        <button class="view-tab" id="tab-workshop" type="button" role="tab" aria-selected="false" aria-controls="view-workshop" data-view-target="workshop">實戰</button>
         <button class="view-tab" id="tab-progress" type="button" role="tab" aria-selected="false" aria-controls="view-progress" data-view-target="progress">進度</button>
         <button class="view-tab" id="tab-ability" type="button" role="tab" aria-selected="false" aria-controls="view-ability" data-view-target="ability">能力</button>
         <button class="view-tab" id="tab-library" type="button" role="tab" aria-selected="false" aria-controls="view-library" data-view-target="library">題庫</button>
@@ -1930,6 +2047,75 @@
               </div>
             </div>
           </section>
+        </div>
+      </section>
+
+      <section class="app-view" id="view-workshop" role="tabpanel" aria-labelledby="tab-workshop" data-view="workshop" hidden>
+        <div class="workshop-grid">
+          <div class="workspace">
+            <section class="panel workshop-panel" aria-labelledby="workshopTitle">
+              <div class="section-head" style="padding:0">
+                <div>
+                  <p class="eyebrow">真實問題工作台</p>
+                  <h3 id="workshopTitle">把自己的問題升級成可用問題</h3>
+                  <p>輸入你真的想問的問題，系統會用六維模型做診斷，再產出可直接使用的升級版本。</p>
+                </div>
+              </div>
+
+              <div class="workshop-form-grid">
+                <div class="field">
+                  <label for="realQuestionInput">原始問題</label>
+                  <textarea id="realQuestionInput" placeholder="例如：我應不應該辭職？"></textarea>
+                </div>
+                <div class="field">
+                  <label for="realContextInput">背景</label>
+                  <textarea id="realContextInput" placeholder="目前發生什麼事？你面對誰、什麼限制、已經嘗試過什麼？"></textarea>
+                </div>
+                <div class="field">
+                  <label for="realGoalInput">想達成的目的</label>
+                  <textarea id="realGoalInput" placeholder="你希望答案幫你做什麼判斷、選擇或下一步行動？"></textarea>
+                </div>
+              </div>
+
+              <div class="action-row" style="padding:0">
+                <button class="btn primary" id="workshopAnalyzeBtn" type="button">本地六維診斷</button>
+                <button class="btn secondary" id="workshopAiBtn" type="button">AI 升級 3 版</button>
+                <button class="btn secondary" id="workshopClearBtn" type="button">清空</button>
+              </div>
+              <div class="ai-status" id="workshopStatus" role="status" aria-live="polite"></div>
+            </section>
+
+            <section class="panel workshop-panel workshop-result-panel" id="workshopResultPanel" aria-labelledby="workshopResultTitle">
+              <div>
+                <p class="eyebrow">六維診斷</p>
+                <h3 id="workshopResultTitle">目前問題的結構</h3>
+              </div>
+              <div class="workshop-summary" id="workshopSummary"></div>
+              <p class="coach-summary" id="workshopDiagnosis"></p>
+              <div class="coach-dimensions" id="workshopDimensions"></div>
+              <div class="coach-section">
+                <h4>補資料追問</h4>
+                <ul id="workshopFollowUps"></ul>
+              </div>
+            </section>
+          </div>
+
+          <div class="workspace">
+            <section class="panel side-panel">
+              <h3>升級版本</h3>
+              <div class="workshop-upgrade-list" id="workshopUpgrades"></div>
+              <div class="model-action">
+                <button class="btn primary" id="saveGoodQuestionBtn" type="button">保存選中版本</button>
+                <button class="btn secondary" id="copyGoodQuestionBtn" type="button">複製選中版本</button>
+              </div>
+            </section>
+
+            <section class="panel side-panel">
+              <h3>我的好問題</h3>
+              <p class="coach-history-note">保存你真正會拿去問 AI、問人或做決策的問題。</p>
+              <div class="good-question-list" id="goodQuestionList"></div>
+            </section>
+          </div>
         </div>
       </section>
 
@@ -2239,7 +2425,9 @@
     const activeTrainingKey = "question-gym-active-training";
     const trainingPreferencesKey = "question-gym-training-preferences";
     const mistakeReviewKey = "question-gym-mistake-review";
+    const realQuestionsKey = "question-gym-real-questions";
     const mistakeReviewLimit = 30;
+    const realQuestionsLimit = 20;
     const trainingHistoryDisplayLimit = 7;
     const weeklyCycleDays = 7;
     const publicShareUrl = "https://iks9245.github.io/Questionsfactory/";
@@ -2467,6 +2655,63 @@
       }
     };
 
+    const workshopUpgradeSchema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["label", "question", "rationale", "bestFor"],
+      properties: {
+        label: { type: "string" },
+        question: { type: "string" },
+        rationale: { type: "string" },
+        bestFor: { type: "string" }
+      }
+    };
+
+    const workshopResultSchema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["overallScore", "summary", "dimensions", "followUps", "upgrades", "recommendedIndex"],
+      properties: {
+        overallScore: {
+          type: "integer",
+          description: "Overall quality score from 0 to 100."
+        },
+        summary: {
+          type: "string",
+          description: "Concise Traditional Chinese diagnosis of the original real question."
+        },
+        dimensions: {
+          type: "object",
+          additionalProperties: false,
+          required: ["purpose", "context", "boundary", "depth", "action", "assumption"],
+          properties: {
+            purpose: coachDimensionResultSchema,
+            context: coachDimensionResultSchema,
+            boundary: coachDimensionResultSchema,
+            depth: coachDimensionResultSchema,
+            action: coachDimensionResultSchema,
+            assumption: coachDimensionResultSchema
+          }
+        },
+        followUps: {
+          type: "array",
+          minItems: 1,
+          maxItems: 3,
+          items: { type: "string" }
+        },
+        upgrades: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: workshopUpgradeSchema
+        },
+        recommendedIndex: {
+          type: "integer",
+          description: "Zero-based index of the strongest upgrade."
+        }
+      }
+    };
+
     const providerConfigs = {
       openai: {
         label: "OpenAI Responses",
@@ -2565,6 +2810,17 @@
       "請提出 1 到 3 個追問，幫使用者補足目前問題缺失的關鍵資訊。",
       "請提供一個示範改寫版本，不能只是堆疊條件，必須更清楚、更聚焦、更能暴露假設。",
       "請比較原弱問題、使用者改寫、AI 示範改寫三者的差異。",
+      "只輸出合法 JSON，不要 Markdown，不要程式碼區塊，不要多餘說明。"
+    ].join("\n");
+
+    const workshopSystemPrompt = [
+      "你是一位繁體中文真實問題教練，專門把使用者真正想問的原始問題升級成可行、可判斷、可追問的高品質問題。",
+      "請先診斷原始問題，不要因為句子較長就給高分。",
+      "你必須用六個維度診斷：目的、情境、邊界、深度、行動、假設。",
+      "每個維度都要給 0 到 5 的整數分數、具體診斷，以及可操作的改進建議。",
+      "請提出 1 到 3 個追問，幫使用者補足缺少的背景或判斷條件。",
+      "請產出剛好 3 個升級版本：一個偏決策、一個偏探索、一個偏執行。三個版本都要可直接拿去問 AI 或問人。",
+      "每個升級版本都要說明它為何更好，以及最適合什麼使用情境。",
       "只輸出合法 JSON，不要 Markdown，不要程式碼區塊，不要多餘說明。"
     ].join("\n");
 
@@ -2786,8 +3042,11 @@
     let activeTraining = loadActiveTraining();
     let trainingPreferences = loadTrainingPreferences();
     let mistakeReview = loadMistakeReview();
+    let realQuestionRecords = loadRealQuestionRecords();
     let mistakeFilter = "all";
     let selectedLibraryIndex = 0;
+    let workshopResult = null;
+    let workshopSelectedUpgradeIndex = 0;
 
     const els = {
       roundsDone: document.getElementById("roundsDone"),
@@ -2879,6 +3138,22 @@
       managerExplanationInput: document.getElementById("managerExplanationInput"),
       saveManagedLessonBtn: document.getElementById("saveManagedLessonBtn"),
       deleteManagedLessonBtn: document.getElementById("deleteManagedLessonBtn"),
+      realQuestionInput: document.getElementById("realQuestionInput"),
+      realContextInput: document.getElementById("realContextInput"),
+      realGoalInput: document.getElementById("realGoalInput"),
+      workshopAnalyzeBtn: document.getElementById("workshopAnalyzeBtn"),
+      workshopAiBtn: document.getElementById("workshopAiBtn"),
+      workshopClearBtn: document.getElementById("workshopClearBtn"),
+      workshopStatus: document.getElementById("workshopStatus"),
+      workshopResultPanel: document.getElementById("workshopResultPanel"),
+      workshopSummary: document.getElementById("workshopSummary"),
+      workshopDiagnosis: document.getElementById("workshopDiagnosis"),
+      workshopDimensions: document.getElementById("workshopDimensions"),
+      workshopFollowUps: document.getElementById("workshopFollowUps"),
+      workshopUpgrades: document.getElementById("workshopUpgrades"),
+      saveGoodQuestionBtn: document.getElementById("saveGoodQuestionBtn"),
+      copyGoodQuestionBtn: document.getElementById("copyGoodQuestionBtn"),
+      goodQuestionList: document.getElementById("goodQuestionList"),
       exportLessonsBtn: document.getElementById("exportLessonsBtn"),
       importLessonsBtn: document.getElementById("importLessonsBtn"),
       importLessonsInput: document.getElementById("importLessonsInput"),
@@ -2899,7 +3174,7 @@
     };
 
     function switchAppView(view, options = {}) {
-      const target = ["training", "progress", "ability", "library"].includes(view) ? view : "training";
+      const target = ["training", "workshop", "progress", "ability", "library"].includes(view) ? view : "training";
       const scroll = Boolean(options.scroll);
 
       els.viewTabs.forEach((tab) => {
@@ -3039,6 +3314,48 @@
         };
       });
       return output;
+    }
+
+    function loadRealQuestionRecords() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(realQuestionsKey));
+        if (!Array.isArray(saved)) return [];
+        return saved.map(sanitizeRealQuestionRecord).filter(Boolean).slice(0, realQuestionsLimit);
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRealQuestionRecords() {
+      localStorage.setItem(realQuestionsKey, JSON.stringify(realQuestionRecords.slice(0, realQuestionsLimit)));
+    }
+
+    function sanitizeRealQuestionRecord(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      const selectedQuestion = asText(raw.selectedQuestion);
+      const rawQuestion = asText(raw.rawQuestion);
+      if (!selectedQuestion || !rawQuestion) return null;
+
+      return {
+        id: asText(raw.id) || `real-${Date.now()}`,
+        at: asText(raw.at) || new Date().toISOString(),
+        rawQuestion,
+        context: asText(raw.context),
+        goal: asText(raw.goal),
+        selectedQuestion,
+        selectedLabel: asText(raw.selectedLabel) || "升級版本",
+        rationale: asText(raw.rationale),
+        bestFor: asText(raw.bestFor),
+        source: asText(raw.source) || "真實問題工作台",
+        overallScore: clampInt(raw.overallScore, 0, 100),
+        weakKeys: Array.isArray(raw.weakKeys)
+          ? raw.weakKeys.filter((key) => dimensions.some((dimension) => dimension.key === key)).slice(0, 3)
+          : [],
+        upgrades: Array.isArray(raw.upgrades)
+          ? raw.upgrades.map(sanitizeWorkshopUpgrade).filter(Boolean).slice(0, 3)
+          : [],
+        summary: asText(raw.summary)
+      };
     }
 
     function loadMistakeReview() {
@@ -3669,7 +3986,7 @@
         await navigator.clipboard.writeText(text);
         showToast(successMessage);
       } catch {
-        showToast("瀏覽器不允許自動複製，請手動複製連結。");
+        showToast("瀏覽器不允許自動複製，請手動複製內容。");
       }
     }
 
@@ -3760,6 +4077,16 @@
       }
       els.coachStatus.textContent = message;
       els.coachStatus.className = `ai-status visible${type ? ` ${type}` : ""}`;
+    }
+
+    function setWorkshopStatus(message, type = "") {
+      if (!message) {
+        els.workshopStatus.textContent = "";
+        els.workshopStatus.className = "ai-status";
+        return;
+      }
+      els.workshopStatus.textContent = message;
+      els.workshopStatus.className = `ai-status visible${type ? ` ${type}` : ""}`;
     }
 
     function createQualityReport(targetCount, targetDifficulty = qualityEngine.defaultDifficulty) {
@@ -5345,6 +5672,494 @@
       };
     }
 
+    function getWorkshopPayload() {
+      return {
+        rawQuestion: els.realQuestionInput.value.trim(),
+        context: els.realContextInput.value.trim(),
+        goal: els.realGoalInput.value.trim()
+      };
+    }
+
+    function buildLocalWorkshopResult(payload) {
+      const combined = `${payload.rawQuestion} ${payload.context} ${payload.goal}`;
+      const checks = {
+        purpose: {
+          score: scoreWorkshopCheck(Boolean(payload.goal) || /想|希望|目標|為了|如何|怎麼|應該|能否|要不要|是否|決定|判斷/.test(combined), payload.goal.length >= 16),
+          diagnosis: payload.goal
+            ? "問題已補上想達成的目的，回答者比較容易知道答案要服務哪個判斷。"
+            : "目前目的偏隱含，回答者可能不知道你想用答案完成什麼決策。",
+          suggestion: "補上一句「我想用答案來決定、比較、設計或驗證什麼」。"
+        },
+        context: {
+          score: scoreWorkshopCheck(payload.context.length >= 10 || /我|我們|團隊|公司|客戶|學生|使用者|目前|已經|過去|因為/.test(combined), payload.context.length >= 32),
+          diagnosis: payload.context
+            ? "問題提供了背景線索，能減少回答落入通用建議。"
+            : "背景資訊不足，答案容易變成泛泛而談。",
+          suggestion: "補上對象、目前狀態、已嘗試方法、限制或衝突。"
+        },
+        boundary: {
+          score: scoreWorkshopCheck(/\d|年|月|週|天|分鐘|小時|預算|成本|三個|五個|最|以內|之前|範圍|階段|限制/.test(combined), (combined.match(/\d|年|月|週|天|預算|以內|之前|限制/g) || []).length >= 2),
+          diagnosis: /範圍|限制|\d|年|月|週|天|以內|之前/.test(combined)
+            ? "問題已有部分邊界，答案比較容易收束。"
+            : "問題缺少時間、資源、候選選項或排除條件。",
+          suggestion: "加上時間、資源、候選方案、輸出數量或不可碰的限制。"
+        },
+        depth: {
+          score: scoreWorkshopCheck(/比較|取捨|風險|代價|反例|原因|為什麼|哪些|哪一個|優先|假如|盲點|驗證/.test(combined), /比較|取捨|風險|反例|盲點|驗證/.test(combined)),
+          diagnosis: /比較|取捨|風險|反例|盲點|驗證/.test(combined)
+            ? "問題開始要求分析與判斷，不只是取得一份清單。"
+            : "問題目前深度不足，可能只得到表面答案。",
+          suggestion: "要求回答比較取捨、列出風險、指出反例或說明判斷標準。"
+        },
+        action: {
+          score: scoreWorkshopCheck(/下一步|建議|計畫|行動|執行|設計|評估|選擇|制定|改善|衡量|指標|實驗/.test(combined), /下一步|計畫|執行|指標|實驗|衡量/.test(combined)),
+          diagnosis: /下一步|建議|計畫|執行|指標|實驗/.test(combined)
+            ? "問題能連到後續行動，答案較容易落地。"
+            : "問題和下一步行動的關係仍不夠明確。",
+          suggestion: "指定希望得到決策建議、行動方案、檢查清單、指標或實驗設計。"
+        },
+        assumption: {
+          score: scoreWorkshopCheck(/假設|前提|我以為|擔心|盲點|風險|限制|反例|忽略|錯在哪/.test(combined), /假設|前提|盲點|反例|忽略/.test(combined)),
+          diagnosis: /假設|前提|盲點|風險|反例|忽略/.test(combined)
+            ? "問題有機會暴露前提，回答者不會只順著你的原想法走。"
+            : "問題尚未攤開隱含前提，回答可能默認你的判斷成立。",
+          suggestion: "補上一句「我可能忽略了哪些前提、盲點或反例」。"
+        }
+      };
+
+      const dimensionResults = {};
+      dimensions.forEach((dimension) => {
+        const check = checks[dimension.key];
+        dimensionResults[dimension.key] = {
+          score: check.score,
+          diagnosis: check.diagnosis,
+          suggestion: check.suggestion
+        };
+      });
+
+      const dimTotal = dimensions.reduce((sum, dimension) => sum + dimensionResults[dimension.key].score, 0);
+      const contextBonus = payload.context ? 3 : 0;
+      const goalBonus = payload.goal ? 3 : 0;
+      const overallScore = clampInt(Math.round((dimTotal / 30) * 94) + contextBonus + goalBonus, 0, 100);
+      const weakDimensions = getWorkshopWeakDimensions({ dimensions: dimensionResults }, 3);
+      const upgrades = buildLocalWorkshopUpgrades(payload);
+
+      return {
+        overallScore,
+        summary: weakDimensions.length
+          ? `這個問題已經有可討論的核心，但「${weakDimensions.map((dimension) => dimension.label).join("、")}」仍會影響答案品質。`
+          : "這個問題的結構已相當完整，可直接進入追問或決策討論。",
+        dimensions: dimensionResults,
+        followUps: buildWorkshopFollowUps(weakDimensions),
+        upgrades,
+        recommendedIndex: 0
+      };
+    }
+
+    function scoreWorkshopCheck(passed, strong = false) {
+      if (strong) return 5;
+      return passed ? 4 : 2;
+    }
+
+    function buildWorkshopFollowUps(weakDimensions) {
+      const prompts = {
+        purpose: "你希望這個答案最後幫你做出哪個具體判斷？",
+        context: "這個問題發生在什麼人、什麼場景、什麼限制之下？",
+        boundary: "你想把答案限制在哪個時間、範圍或候選選項內？",
+        depth: "你最需要回答者比較哪些取捨、風險或反例？",
+        action: "拿到答案後，你下一步會採取什麼行動？",
+        assumption: "你現在默認了哪些前提，可能需要被檢查？"
+      };
+      const targets = weakDimensions.length ? weakDimensions : dimensions.slice(0, 2);
+      return targets.map((dimension) => prompts[dimension.key]).filter(Boolean).slice(0, 3);
+    }
+
+    function buildLocalWorkshopUpgrades(payload) {
+      const raw = payload.rawQuestion.replace(/[。！？!?]+$/g, "");
+      const context = payload.context || "在目前情境與限制下";
+      const goal = payload.goal || "做出更清楚的判斷與下一步行動";
+
+      return [
+        {
+          label: "決策版",
+          question: `基於「${context}」，我的目標是「${goal}」。針對「${raw}」，請比較 2 到 3 個可行選項，說明判斷標準、主要風險、我可能忽略的前提，最後給出建議下一步。`,
+          rationale: "把原問題變成可比較、可取捨、可決策的問題。",
+          bestFor: "需要選方向、做取捨或降低決策焦慮時。"
+        },
+        {
+          label: "探索版",
+          question: `關於「${raw}」，在「${context}」之下，哪些原因、假設或盲點最值得先釐清？請先提出必要追問，再整理 3 個最值得驗證的可能方向。`,
+          rationale: "先打開未知與假設，避免太早跳到單一答案。",
+          bestFor: "問題仍模糊、資料不足、需要先釐清真問題時。"
+        },
+        {
+          label: "執行版",
+          question: `請把「${raw}」轉成一個可在 7 天內驗證的小實驗。已知背景是「${context}」，目標是「${goal}」。請列出步驟、成功指標、風險和下一次復盤問題。`,
+          rationale: "把問題收束成可做、可量、可復盤的行動方案。",
+          bestFor: "已經想開始行動，但需要降低試錯成本時。"
+        }
+      ];
+    }
+
+    function normalizeWorkshopResult(raw, payload) {
+      const fallback = buildLocalWorkshopResult(payload);
+      const source = raw?.workshop || raw?.result || raw?.evaluation || raw;
+      if (!source || typeof source !== "object") return fallback;
+
+      const dimensionsOut = {};
+      dimensions.forEach((dimension) => {
+        const item = source.dimensions?.[dimension.key] || {};
+        const fallbackItem = fallback.dimensions[dimension.key];
+        dimensionsOut[dimension.key] = {
+          score: clampInt(item.score ?? fallbackItem.score, 0, 5),
+          diagnosis: asText(item.diagnosis) || fallbackItem.diagnosis,
+          suggestion: asText(item.suggestion) || fallbackItem.suggestion
+        };
+      });
+
+      const rawUpgrades = Array.isArray(source.upgrades)
+        ? source.upgrades
+        : Array.isArray(source.versions)
+          ? source.versions
+          : Array.isArray(source.rewrites)
+            ? source.rewrites
+            : [];
+      const upgrades = rawUpgrades.map(sanitizeWorkshopUpgrade).filter(Boolean).slice(0, 3);
+      fallback.upgrades.forEach((upgrade) => {
+        if (upgrades.length < 3) upgrades.push(upgrade);
+      });
+
+      const followUps = Array.isArray(source.followUps)
+        ? source.followUps.map(asText).filter(Boolean).slice(0, 3)
+        : fallback.followUps;
+      const dimTotal = dimensions.reduce((sum, dimension) => sum + dimensionsOut[dimension.key].score, 0);
+      const computedScore = Math.round((dimTotal / 30) * 100);
+
+      return {
+        overallScore: clampInt(source.overallScore ?? computedScore, 0, 100),
+        summary: asText(source.summary) || fallback.summary,
+        dimensions: dimensionsOut,
+        followUps: followUps.length ? followUps : fallback.followUps,
+        upgrades,
+        recommendedIndex: clampInt(source.recommendedIndex ?? 0, 0, 2)
+      };
+    }
+
+    function sanitizeWorkshopUpgrade(raw) {
+      if (typeof raw === "string") {
+        const question = raw.trim();
+        return question
+          ? { label: "升級版本", question, rationale: "比原問題更完整。", bestFor: "需要直接拿去提問時。" }
+          : null;
+      }
+      if (!raw || typeof raw !== "object") return null;
+      const question = asText(raw.question || raw.text || raw.rewrite || raw.content);
+      if (!question) return null;
+      return {
+        label: asText(raw.label || raw.title || raw.type) || "升級版本",
+        question,
+        rationale: asText(raw.rationale || raw.reason || raw.why) || "補強目的、情境與判斷結構。",
+        bestFor: asText(raw.bestFor || raw.useCase || raw.when) || "需要直接拿去提問時。"
+      };
+    }
+
+    function getWorkshopWeakDimensions(result, limit = 3) {
+      return dimensions
+        .map((dimension) => ({
+          ...dimension,
+          score: clampInt(result.dimensions?.[dimension.key]?.score, 0, 5)
+        }))
+        .filter((dimension) => dimension.score <= 3)
+        .sort((a, b) => {
+          if (a.score !== b.score) return a.score - b.score;
+          return dimensions.findIndex((dimension) => dimension.key === a.key) - dimensions.findIndex((dimension) => dimension.key === b.key);
+        })
+        .slice(0, limit);
+    }
+
+    function applyWorkshopResult(result, sourceLabel, recordEvidence = false) {
+      workshopResult = {
+        ...result,
+        sourceLabel,
+        payload: getWorkshopPayload(),
+        at: new Date().toISOString()
+      };
+      workshopSelectedUpgradeIndex = clampInt(workshopResult.recommendedIndex, 0, Math.max(0, workshopResult.upgrades.length - 1));
+      renderWorkshopResult();
+      if (recordEvidence) addWorkshopEvidenceRecord(workshopResult, sourceLabel);
+    }
+
+    function addWorkshopEvidenceRecord(result, sourceLabel) {
+      const payload = result.payload || getWorkshopPayload();
+      const selected = result.upgrades?.[workshopSelectedUpgradeIndex] || result.upgrades?.[0];
+      if (!payload.rawQuestion || !selected?.question) return;
+      const syntheticLesson = {
+        title: "真實問題工作台",
+        weak: payload.rawQuestion
+      };
+      addCoachHistoryRecord({
+        overallScore: result.overallScore,
+        summary: result.summary,
+        dimensions: result.dimensions,
+        followUps: result.followUps,
+        modelRewrite: selected.question,
+        comparison: {
+          originalWeak: payload.rawQuestion,
+          userRewrite: payload.rawQuestion,
+          modelRewrite: selected.question
+        }
+      }, syntheticLesson, payload.rawQuestion, `真實問題 / ${sourceLabel}`);
+    }
+
+    function renderWorkshopResult() {
+      const hasResult = Boolean(workshopResult);
+      els.workshopResultPanel.classList.toggle("visible", hasResult);
+      els.saveGoodQuestionBtn.disabled = !hasResult;
+      els.copyGoodQuestionBtn.disabled = !hasResult;
+      renderWorkshopUpgrades();
+      renderGoodQuestionList();
+      if (!hasResult) return;
+
+      const weakDimensions = getWorkshopWeakDimensions(workshopResult, 3);
+      els.workshopSummary.innerHTML = "";
+      [
+        ["分數", `${workshopResult.overallScore}`],
+        ["最弱項", weakDimensions.map((dimension) => dimension.label).join(" / ") || "暫無"],
+        ["來源", workshopResult.sourceLabel || "本地"],
+        ["已保存", `${realQuestionRecords.length}`]
+      ].forEach(([label, value]) => {
+        const chip = document.createElement("div");
+        chip.className = "model-chip";
+        const labelEl = document.createElement("span");
+        labelEl.textContent = label;
+        const valueEl = document.createElement("strong");
+        valueEl.textContent = value;
+        chip.append(labelEl, valueEl);
+        els.workshopSummary.appendChild(chip);
+      });
+
+      els.workshopDiagnosis.textContent = workshopResult.summary;
+      els.workshopDimensions.innerHTML = "";
+      dimensions.forEach((dimension) => {
+        const item = workshopResult.dimensions[dimension.key];
+        const card = document.createElement("div");
+        card.className = "coach-dimension";
+        card.innerHTML = `
+          <div class="coach-dimension-head">
+            <span>${dimension.label}</span>
+            <span>${item.score}/5</span>
+          </div>
+          <p></p>
+          <p></p>
+        `;
+        const paragraphs = card.querySelectorAll("p");
+        paragraphs[0].textContent = `診斷：${item.diagnosis}`;
+        paragraphs[1].textContent = `建議：${item.suggestion}`;
+        els.workshopDimensions.appendChild(card);
+      });
+
+      els.workshopFollowUps.innerHTML = "";
+      workshopResult.followUps.forEach((question) => {
+        const li = document.createElement("li");
+        li.textContent = question;
+        els.workshopFollowUps.appendChild(li);
+      });
+    }
+
+    function renderWorkshopUpgrades() {
+      els.workshopUpgrades.innerHTML = "";
+      if (!workshopResult?.upgrades?.length) {
+        const empty = document.createElement("div");
+        empty.className = "history-row";
+        const label = document.createElement("span");
+        label.textContent = "先做本地診斷或 AI 升級";
+        const value = document.createElement("strong");
+        value.textContent = "0";
+        empty.append(label, value);
+        els.workshopUpgrades.appendChild(empty);
+        return;
+      }
+
+      workshopResult.upgrades.forEach((upgrade, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = `upgrade-card${index === workshopSelectedUpgradeIndex ? " selected" : ""}`;
+        card.setAttribute("aria-pressed", index === workshopSelectedUpgradeIndex ? "true" : "false");
+        card.addEventListener("click", () => selectWorkshopUpgrade(index));
+
+        const head = document.createElement("div");
+        head.className = "upgrade-card-head";
+        const title = document.createElement("strong");
+        title.textContent = upgrade.label || `版本 ${index + 1}`;
+        const marker = document.createElement("span");
+        marker.textContent = index === workshopSelectedUpgradeIndex ? "已選" : `版本 ${index + 1}`;
+        head.append(title, marker);
+
+        const question = document.createElement("p");
+        question.className = "upgrade-question";
+        question.textContent = upgrade.question;
+        const rationale = document.createElement("p");
+        rationale.textContent = `為何更好：${upgrade.rationale}`;
+        const bestFor = document.createElement("p");
+        bestFor.textContent = `適合：${upgrade.bestFor}`;
+        card.append(head, question, rationale, bestFor);
+        els.workshopUpgrades.appendChild(card);
+      });
+    }
+
+    function renderGoodQuestionList() {
+      els.goodQuestionList.innerHTML = "";
+      if (!realQuestionRecords.length) {
+        const empty = document.createElement("div");
+        empty.className = "history-row";
+        const label = document.createElement("span");
+        label.textContent = "尚未保存好問題";
+        const value = document.createElement("strong");
+        value.textContent = "0";
+        empty.append(label, value);
+        els.goodQuestionList.appendChild(empty);
+        return;
+      }
+
+      realQuestionRecords.slice(0, 6).forEach((record) => {
+        const card = document.createElement("article");
+        card.className = "good-question-card";
+        const date = new Date(record.at);
+        const dateLabel = Number.isNaN(date.getTime())
+          ? "最近"
+          : date.toLocaleDateString("zh-Hant", { month: "2-digit", day: "2-digit" });
+        const head = document.createElement("div");
+        head.className = "good-question-head";
+        const title = document.createElement("strong");
+        title.textContent = record.selectedLabel;
+        const meta = document.createElement("span");
+        meta.textContent = `${dateLabel} · ${record.overallScore}`;
+        head.append(title, meta);
+
+        const question = document.createElement("p");
+        question.className = "upgrade-question";
+        question.textContent = record.selectedQuestion;
+        const raw = document.createElement("p");
+        raw.textContent = `原題：${record.rawQuestion}`;
+        const source = document.createElement("p");
+        source.textContent = `來源：${record.source}`;
+        card.append(head, question, raw, source);
+        els.goodQuestionList.appendChild(card);
+      });
+    }
+
+    function selectWorkshopUpgrade(index) {
+      if (!workshopResult?.upgrades?.[index]) return;
+      workshopSelectedUpgradeIndex = index;
+      renderWorkshopUpgrades();
+    }
+
+    function analyzeWorkshopLocally() {
+      const payload = getWorkshopPayload();
+      if (!payload.rawQuestion) {
+        showToast("先輸入一條你真正想問的原始問題。");
+        return;
+      }
+      const result = buildLocalWorkshopResult(payload);
+      applyWorkshopResult(result, "本地六維診斷", true);
+      setWorkshopStatus("已完成本地六維診斷，並回寫到能力模型。", "success");
+    }
+
+    async function generateWorkshopWithAi() {
+      const payload = getWorkshopPayload();
+      const provider = els.providerSelect.value;
+      const model = els.modelInput.value.trim();
+      const apiKey = els.apiKeyInput.value.trim();
+      const endpoint = els.endpointInput.value.trim();
+      const config = providerConfigs[provider];
+
+      if (!payload.rawQuestion) {
+        showToast("先輸入一條你真正想問的原始問題。");
+        return;
+      }
+      if (config.requiresKey && !apiKey) {
+        setWorkshopStatus("請先填入 API key。", "error");
+        return;
+      }
+      if (!model) {
+        setWorkshopStatus("請先填入模型名稱。", "error");
+        return;
+      }
+      if (config.needsEndpoint && !endpoint) {
+        setWorkshopStatus("請先填入本機或自訂端點。", "error");
+        return;
+      }
+
+      saveAiSettings();
+      els.workshopAnalyzeBtn.disabled = true;
+      els.workshopAiBtn.disabled = true;
+      setWorkshopStatus(`正在用 ${config.label} 診斷並生成 3 個升級版本...`);
+
+      try {
+        const raw = await callWorkshopProvider({ provider, model, apiKey, endpoint, payload });
+        const result = normalizeWorkshopResult(raw, payload);
+        applyWorkshopResult(result, config.label, true);
+        setWorkshopStatus("AI 已生成 3 個升級版本，並回寫到能力模型。", "success");
+      } catch (error) {
+        setWorkshopStatus(formatWorkshopError(error, provider, endpoint), "error");
+      } finally {
+        els.workshopAnalyzeBtn.disabled = false;
+        els.workshopAiBtn.disabled = false;
+      }
+    }
+
+    function saveSelectedGoodQuestion() {
+      if (!workshopResult?.upgrades?.length) {
+        showToast("先完成診斷，再保存升級版本。");
+        return;
+      }
+      const selected = workshopResult.upgrades[workshopSelectedUpgradeIndex] || workshopResult.upgrades[0];
+      const payload = workshopResult.payload || getWorkshopPayload();
+      const record = {
+        id: `real-${Date.now()}`,
+        at: new Date().toISOString(),
+        rawQuestion: payload.rawQuestion,
+        context: payload.context,
+        goal: payload.goal,
+        selectedQuestion: selected.question,
+        selectedLabel: selected.label,
+        rationale: selected.rationale,
+        bestFor: selected.bestFor,
+        source: workshopResult.sourceLabel || "真實問題工作台",
+        overallScore: workshopResult.overallScore,
+        weakKeys: getWorkshopWeakDimensions(workshopResult, 3).map((dimension) => dimension.key),
+        upgrades: workshopResult.upgrades,
+        summary: workshopResult.summary
+      };
+      const fingerprint = `${normalizeComparableText(record.rawQuestion)}::${normalizeComparableText(record.selectedQuestion)}`;
+      realQuestionRecords = [
+        record,
+        ...realQuestionRecords.filter((item) => `${normalizeComparableText(item.rawQuestion)}::${normalizeComparableText(item.selectedQuestion)}` !== fingerprint)
+      ].slice(0, realQuestionsLimit);
+      saveRealQuestionRecords();
+      renderWorkshopResult();
+      showToast("已保存到我的好問題。");
+    }
+
+    async function copySelectedGoodQuestion() {
+      if (!workshopResult?.upgrades?.length) {
+        showToast("先完成診斷，再複製升級版本。");
+        return;
+      }
+      const selected = workshopResult.upgrades[workshopSelectedUpgradeIndex] || workshopResult.upgrades[0];
+      await copyTextToClipboard(selected.question, "已複製選中的好問題。");
+    }
+
+    function clearWorkshop() {
+      els.realQuestionInput.value = "";
+      els.realContextInput.value = "";
+      els.realGoalInput.value = "";
+      workshopResult = null;
+      workshopSelectedUpgradeIndex = 0;
+      setWorkshopStatus("");
+      renderWorkshopResult();
+    }
+
     async function copyQuestion() {
       const text = els.rewriteInput.value.trim();
       if (!text) {
@@ -5495,6 +6310,18 @@
       throw new Error("尚未支援這個供應商。");
     }
 
+    async function callWorkshopProvider(options) {
+      if (options.provider === "openai") return callOpenAIWorkshop(options);
+      if (options.provider === "gemini") return callGeminiWorkshop(options);
+      if (options.provider === "anthropic") return callAnthropicWorkshop(options);
+      if (options.provider === "openrouter") return callOpenRouterWorkshop(options);
+      if (options.provider === "omlx") return callLocalCompatibleWorkshop(options);
+      if (options.provider === "local-compatible") return callLocalCompatibleWorkshop(options);
+      if (options.provider === "ollama") return callOllamaWorkshop(options);
+      if (options.provider === "compatible") return callOpenAICompatibleWorkshop(options);
+      throw new Error("尚未支援這個供應商。");
+    }
+
     function buildUserPrompt(topic, lessonCount = 10, includeJsonContract = false, qualityFeedback = "", targetDifficulty = qualityEngine.defaultDifficulty) {
       const difficulty = getDifficultyProfile(targetDifficulty);
       const [bestTarget, secondTarget, thirdTarget, fourthTarget] = difficulty.targetScores;
@@ -5561,6 +6388,36 @@
           "只輸出合法 JSON，不要 Markdown，不要程式碼區塊。",
           "JSON 結構必須完全符合：",
           '{"overallScore":86,"summary":"...","dimensions":{"purpose":{"score":4,"diagnosis":"...","suggestion":"..."},"context":{"score":4,"diagnosis":"...","suggestion":"..."},"boundary":{"score":4,"diagnosis":"...","suggestion":"..."},"depth":{"score":4,"diagnosis":"...","suggestion":"..."},"action":{"score":4,"diagnosis":"...","suggestion":"..."},"assumption":{"score":4,"diagnosis":"...","suggestion":"..."}},"followUps":["..."],"modelRewrite":"...","comparison":{"originalWeak":"...","userRewrite":"...","modelRewrite":"..."}}',
+          "dimensions 必須包含 purpose、context、boundary、depth、action、assumption。每個 score 都是 0 到 5 的整數，overallScore 是 0 到 100 的整數。"
+        );
+      }
+
+      return lines.join("\n");
+    }
+
+    function estimateWorkshopMaxTokens() {
+      return 5200;
+    }
+
+    function buildWorkshopPrompt(payload, includeJsonContract = false) {
+      const lines = [
+        `原始問題：${payload.rawQuestion}`,
+        `背景：${payload.context || "使用者尚未提供背景。"}`,
+        `想達成的目的：${payload.goal || "使用者尚未提供目的。"}`,
+        "",
+        "請先評估原始問題，而不是直接美化文字。",
+        "六個維度都要有分數、診斷和建議：purpose=目的、context=情境、boundary=邊界、depth=深度、action=行動、assumption=假設。",
+        "followUps 必須是 1 到 3 條真正能幫使用者補資料的追問。",
+        "upgrades 必須剛好 3 個，分別偏向決策、探索、執行；每個 question 都要能直接拿去問 AI 或問人。",
+        "recommendedIndex 請填 0 到 2，代表你最推薦使用者先採用的版本。"
+      ];
+
+      if (includeJsonContract) {
+        lines.push(
+          "",
+          "只輸出合法 JSON，不要 Markdown，不要程式碼區塊。",
+          "JSON 結構必須完全符合：",
+          '{"overallScore":78,"summary":"...","dimensions":{"purpose":{"score":4,"diagnosis":"...","suggestion":"..."},"context":{"score":3,"diagnosis":"...","suggestion":"..."},"boundary":{"score":3,"diagnosis":"...","suggestion":"..."},"depth":{"score":4,"diagnosis":"...","suggestion":"..."},"action":{"score":3,"diagnosis":"...","suggestion":"..."},"assumption":{"score":2,"diagnosis":"...","suggestion":"..."}},"followUps":["..."],"upgrades":[{"label":"決策版","question":"...","rationale":"...","bestFor":"..."},{"label":"探索版","question":"...","rationale":"...","bestFor":"..."},{"label":"執行版","question":"...","rationale":"...","bestFor":"..."}],"recommendedIndex":0}',
           "dimensions 必須包含 purpose、context、boundary、depth、action、assumption。每個 score 都是 0 到 5 的整數，overallScore 是 0 到 100 的整數。"
         );
       }
@@ -6034,6 +6891,229 @@
       return parseJsonText(text);
     }
 
+    async function callOpenAIWorkshop({ apiKey, model, payload }) {
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          input: [
+            { role: "system", content: workshopSystemPrompt },
+            { role: "user", content: buildWorkshopPrompt(payload, false) }
+          ],
+          text: {
+            format: {
+              type: "json_schema",
+              name: "real_question_workshop",
+              strict: true,
+              schema: workshopResultSchema
+            }
+          },
+          max_output_tokens: estimateWorkshopMaxTokens(),
+          store: false
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      return parseJsonText(extractOpenAIText(data));
+    }
+
+    async function callGeminiWorkshop({ apiKey, model, payload }) {
+      const modelPath = model.startsWith("models/") ? model : `models/${model}`;
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: workshopSystemPrompt }]
+          },
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: buildWorkshopPrompt(payload, false) }]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.45,
+            maxOutputTokens: estimateWorkshopMaxTokens(),
+            responseMimeType: "application/json",
+            responseSchema: toGeminiSchema(workshopResultSchema)
+          }
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
+      return parseJsonText(text);
+    }
+
+    async function callAnthropicWorkshop({ apiKey, model, payload }) {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: estimateWorkshopMaxTokens(),
+          system: workshopSystemPrompt,
+          messages: [
+            { role: "user", content: buildWorkshopPrompt(payload, false) }
+          ],
+          tools: [
+            {
+              name: "upgrade_real_question",
+              description: "Diagnose and upgrade a user's real question.",
+              input_schema: workshopResultSchema
+            }
+          ],
+          tool_choice: {
+            type: "tool",
+            name: "upgrade_real_question"
+          }
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      const toolUse = data.content?.find((item) => item.type === "tool_use" && item.name === "upgrade_real_question");
+      if (toolUse?.input) return toolUse.input;
+      const text = data.content?.map((item) => item.text || "").join("") || "";
+      return parseJsonText(text);
+    }
+
+    async function callOpenRouterWorkshop({ apiKey, model, payload }) {
+      return callWorkshopChatCompletions({
+        url: "https://openrouter.ai/api/v1/chat/completions",
+        apiKey,
+        model,
+        payload,
+        extraHeaders: {
+          "HTTP-Referer": location.origin && location.origin !== "null" ? location.href : "https://local.question-gym",
+          "X-OpenRouter-Title": "問題力訓練場"
+        }
+      });
+    }
+
+    async function callOpenAICompatibleWorkshop({ apiKey, model, endpoint, payload }) {
+      return callWorkshopChatCompletions({
+        url: normalizeChatCompletionsEndpoint(endpoint),
+        apiKey,
+        model,
+        payload,
+        extraHeaders: {},
+        includeJsonContract: true
+      });
+    }
+
+    async function callLocalCompatibleWorkshop({ apiKey, model, endpoint, payload }) {
+      const chatEndpoint = normalizeChatCompletionsEndpoint(endpoint);
+      try {
+        return await callWorkshopChatCompletions({
+          url: chatEndpoint,
+          apiKey,
+          model,
+          payload,
+          extraHeaders: {},
+          responseFormatMode: "json_object",
+          includeJsonContract: true
+        });
+      } catch (error) {
+        if (!/response_format|json_object|unsupported|unknown/i.test(error.message || "")) throw error;
+        return callWorkshopChatCompletions({
+          url: chatEndpoint,
+          apiKey,
+          model,
+          payload,
+          extraHeaders: {},
+          responseFormatMode: "none",
+          includeJsonContract: true
+        });
+      }
+    }
+
+    async function callOllamaWorkshop({ model, endpoint, payload }) {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          stream: false,
+          format: "json",
+          options: {
+            temperature: 0.45,
+            num_predict: estimateWorkshopMaxTokens()
+          },
+          messages: [
+            { role: "system", content: workshopSystemPrompt },
+            { role: "user", content: buildWorkshopPrompt(payload, true) }
+          ]
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      const text = data.message?.content || data.response || "";
+      return typeof text === "object" ? text : parseJsonText(text);
+    }
+
+    async function callWorkshopChatCompletions({
+      url,
+      apiKey,
+      model,
+      payload,
+      extraHeaders,
+      responseFormatMode = "schema",
+      includeJsonContract = false
+    }) {
+      const headers = {
+        "Content-Type": "application/json",
+        ...extraHeaders
+      };
+      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+      const body = {
+        model,
+        messages: [
+          { role: "system", content: workshopSystemPrompt },
+          { role: "user", content: buildWorkshopPrompt(payload, includeJsonContract) }
+        ],
+        temperature: 0.45,
+        max_tokens: estimateWorkshopMaxTokens()
+      };
+
+      if (responseFormatMode === "schema") {
+        body.response_format = {
+          type: "json_schema",
+          json_schema: {
+            name: "real_question_workshop",
+            strict: true,
+            schema: workshopResultSchema
+          }
+        };
+      } else if (responseFormatMode === "json_object") {
+        body.response_format = { type: "json_object" };
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const data = await parseProviderResponse(response);
+      const text = data.choices?.[0]?.message?.content || "";
+      return parseJsonText(text);
+    }
+
     function normalizeChatCompletionsEndpoint(endpoint) {
       const trimmed = endpoint.trim().replace(/\/+$/, "");
       if (!trimmed) return trimmed;
@@ -6068,6 +7148,14 @@
       const message = formatProviderError(error, provider, endpoint);
       if (/產題失敗/.test(message)) {
         return message.replace("產題失敗", "AI 教練評估失敗");
+      }
+      return message;
+    }
+
+    function formatWorkshopError(error, provider, endpoint) {
+      const message = formatProviderError(error, provider, endpoint);
+      if (/產題失敗/.test(message)) {
+        return message.replace("產題失敗", "AI 升級失敗");
       }
       return message;
     }
@@ -6568,6 +7656,11 @@
     els.openProgressViewBtn.addEventListener("click", () => switchAppView("progress", { scroll: true }));
     els.focusTrainingBtn.addEventListener("click", focusTrainingStep);
     els.resetTrainingBtn.addEventListener("click", resetTodayTraining);
+    els.workshopAnalyzeBtn.addEventListener("click", analyzeWorkshopLocally);
+    els.workshopAiBtn.addEventListener("click", generateWorkshopWithAi);
+    els.workshopClearBtn.addEventListener("click", clearWorkshop);
+    els.saveGoodQuestionBtn.addEventListener("click", saveSelectedGoodQuestion);
+    els.copyGoodQuestionBtn.addEventListener("click", copySelectedGoodQuestion);
     els.mistakeFilterButtons.forEach((button) => {
       button.addEventListener("click", () => setMistakeFilter(button.dataset.mistakeFilter));
     });
@@ -6593,6 +7686,7 @@
     initTrainingPreferences();
     initShareUi();
     switchAppView("training");
+    renderWorkshopResult();
     renderLibraryManager();
     renderCoachHistory();
     render();
