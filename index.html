@@ -135,14 +135,66 @@
       width: min(1180px, calc(100% - 32px));
       margin: 26px auto 36px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 350px;
-      gap: 20px;
+      grid-template-columns: 1fr;
+      gap: 16px;
       align-items: start;
     }
 
     .workspace {
       display: grid;
       gap: 16px;
+    }
+
+    .app-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+      padding: 8px;
+    }
+
+    .view-tab {
+      min-width: 92px;
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .view-tab:hover {
+      background: #f4f7fb;
+      color: var(--ink);
+    }
+
+    .view-tab.active {
+      background: var(--teal);
+      color: white;
+    }
+
+    .app-view[hidden] {
+      display: none;
+    }
+
+    .app-view.active {
+      display: block;
+    }
+
+    .view-grid,
+    .training-dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .ability-grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
     }
 
     .panel {
@@ -746,6 +798,13 @@
       gap: 16px;
     }
 
+    .weekly-snapshot {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
     .weekly-head {
       display: flex;
       justify-content: space-between;
@@ -770,6 +829,14 @@
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
+    }
+
+    .weekly-snapshot .weekly-scoreboard {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .weekly-snapshot .btn {
+      width: 100%;
     }
 
     .weekly-layout {
@@ -1422,7 +1489,9 @@
     }
 
     @media (max-width: 980px) {
-      .main {
+      .main,
+      .view-grid,
+      .training-dashboard {
         grid-template-columns: 1fr;
       }
 
@@ -1448,6 +1517,16 @@
       .top-actions {
         width: 100%;
         justify-content: stretch;
+      }
+
+      .app-tabs {
+        position: sticky;
+        top: 91px;
+        z-index: 8;
+      }
+
+      .view-tab {
+        flex: 1 0 auto;
       }
 
       .metric-pill {
@@ -1487,6 +1566,8 @@
       .weekly-head,
       .weekly-scoreboard,
       .weekly-layout,
+      .view-grid,
+      .training-dashboard,
       .model-summary,
       .coach-dimensions,
       .comparison-grid,
@@ -1552,364 +1633,421 @@
     </header>
 
     <main class="main">
-      <div class="workspace">
-        <section class="panel intro" aria-labelledby="projectIntroTitle">
-          <div>
-            <p class="eyebrow">Project</p>
-            <h2 id="projectIntroTitle">用問題驅動思考，而不是只追逐答案</h2>
-          </div>
-          <p>
-            Questionsfactory 是一個單頁訓練工具，目標是幫使用者建立「判斷問題品質」的能力。它透過辨識、解析、改寫、AI 教練回饋與個人化能力模型，訓練使用者看見目的、情境、邊界、深度、行動與假設。
-          </p>
-          <div class="intro-points" aria-label="項目核心能力">
-            <div class="intro-point">
-              <strong>辨識好問題</strong>
-              <span>從多個相似選項中判斷哪個問題更能推動思考。</span>
-            </div>
-            <div class="intro-point">
-              <strong>升級弱問題</strong>
-              <span>把空泛、封閉或失焦的問題改寫成可行動的問題。</span>
-            </div>
-            <div class="intro-point">
-              <strong>AI 問題教練</strong>
-              <span>支援雲端與本機模型，評改你的問題並提出追問。</span>
-            </div>
-          </div>
-        </section>
+      <nav class="app-tabs" aria-label="Questionsfactory 視圖" role="tablist">
+        <button class="view-tab active" id="tab-training" type="button" role="tab" aria-selected="true" aria-controls="view-training" data-view-target="training">訓練</button>
+        <button class="view-tab" id="tab-progress" type="button" role="tab" aria-selected="false" aria-controls="view-progress" data-view-target="progress">進度</button>
+        <button class="view-tab" id="tab-ability" type="button" role="tab" aria-selected="false" aria-controls="view-ability" data-view-target="ability">能力</button>
+        <button class="view-tab" id="tab-library" type="button" role="tab" aria-selected="false" aria-controls="view-library" data-view-target="library">題庫</button>
+      </nav>
 
-        <section class="panel training-path" aria-labelledby="trainingPathTitle">
-          <div class="training-head">
-            <div>
-              <p class="eyebrow">個人化訓練路徑</p>
-              <h3 id="trainingPathTitle">今日 10 分鐘訓練</h3>
-              <p id="trainingGoalText">系統會根據能力模型安排今天最值得練的一輪。</p>
-            </div>
-            <div class="training-time">
-              10 分鐘
-              <span id="trainingTargetText">等待開始</span>
-            </div>
-          </div>
-
-          <div class="training-grid">
-            <div class="training-card">
-              <strong id="trainingGoalTitle">今日目標</strong>
-              <p id="trainingReasonText">先累積一題辨識訓練或一次 AI 教練評估，系統會自動校準你的訓練路徑。</p>
-            </div>
-            <div class="path-steps" id="trainingSteps"></div>
-          </div>
-
-          <div class="training-actions">
-            <button class="btn primary" id="startTrainingBtn" type="button">開始今日 10 分鐘訓練</button>
-            <button class="btn secondary" id="focusTrainingBtn" type="button">前往目前步驟</button>
-            <button class="btn warn" id="resetTrainingBtn" type="button">重開今日訓練</button>
-          </div>
-
-          <div class="training-summary" id="trainingSummary" aria-live="polite"></div>
-
-          <div class="training-card">
-            <strong>最近 7 次訓練</strong>
-            <div class="session-history" id="trainingHistory"></div>
-          </div>
-        </section>
-
-        <section class="panel weekly-cycle" aria-labelledby="weeklyCycleTitle">
-          <div class="weekly-head">
-            <div>
-              <p class="eyebrow">7 天訓練週期</p>
-              <h3 id="weeklyCycleTitle">本週訓練概況</h3>
-              <p id="weeklyCycleText">完成每日訓練後，這裡會把節奏、進步與下一次方向串起來。</p>
-            </div>
-            <div class="training-time">
-              7 天
-              <span id="weeklyCycleWindow">等待資料</span>
-            </div>
-          </div>
-
-          <div class="weekly-scoreboard">
-            <div class="model-chip">
-              <span>連續天數</span>
-              <strong id="weeklyStreak">0</strong>
-            </div>
-            <div class="model-chip">
-              <span>完成天數</span>
-              <strong id="weeklyCompletedDays">0/7</strong>
-            </div>
-            <div class="model-chip">
-              <span>本週最進步</span>
-              <strong id="weeklyImprovedDim">--</strong>
-            </div>
-            <div class="model-chip">
-              <span>仍最弱</span>
-              <strong id="weeklyWeakDim">--</strong>
-            </div>
-          </div>
-
-          <div class="weekly-layout">
-            <div class="training-card">
-              <strong>最近 7 天狀態</strong>
-              <div class="week-strip">
-                <div class="week-days" id="weeklyDays"></div>
-              </div>
-            </div>
-            <div class="training-card recommendation-card">
-              <strong>下一次訓練方向</strong>
-              <p id="weeklyRecommendation">先完成一輪今日訓練，系統會開始推薦下一次要補強的維度。</p>
-              <button class="btn primary" id="startRecommendedTrainingBtn" type="button">開始推薦訓練</button>
-            </div>
-          </div>
-
-          <div class="weekly-layout">
-            <div class="training-card chart-card">
-              <div class="chart-head">
-                <strong>成效曲線</strong>
-                <span id="weeklyTrendLabel">等待資料</span>
-              </div>
-              <div class="performance-chart" id="weeklyChart" aria-label="最近 7 天訓練分數曲線"></div>
-            </div>
-            <div class="training-card">
-              <strong>六維趨勢</strong>
-              <div class="dimension-trends" id="weeklyDimensionTrends"></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel generator" aria-labelledby="generatorTitle">
-          <div class="section-head" style="padding:0">
-            <div>
-              <p class="eyebrow">AI 出題</p>
-              <h3 id="generatorTitle">用 LLM 產出新問題</h3>
-              <p>選擇供應商、填入自己的 API key，產生一組新的辨識題與改寫題。</p>
-            </div>
-          </div>
-
-          <div class="generator-grid">
-            <div class="field">
-              <label for="providerSelect">供應商</label>
-              <select id="providerSelect">
-                <option value="openai">OpenAI Responses</option>
-                <option value="gemini">Google Gemini</option>
-                <option value="anthropic">Anthropic Claude</option>
-                <option value="openrouter">OpenRouter</option>
-                <option value="omlx">OMLX / MLX server</option>
-                <option value="local-compatible">Local OpenAI-compatible</option>
-                <option value="ollama">Ollama native</option>
-                <option value="compatible">OpenAI-compatible</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="modelInput">模型</label>
-              <input id="modelInput" type="text" autocomplete="off">
-            </div>
-            <div class="field">
-              <label for="lessonCountInput">題庫數量</label>
-              <input id="lessonCountInput" type="number" min="10" max="30" step="1" value="10">
-            </div>
-            <div class="field" id="apiKeyField">
-              <label for="apiKeyInput" id="apiKeyLabel">API key</label>
-              <input id="apiKeyInput" type="password" autocomplete="off" placeholder="只在你的瀏覽器中使用">
-            </div>
-          </div>
-
-          <div class="field custom-endpoint hidden" id="endpointField">
-            <label for="endpointInput">自訂端點</label>
-            <input id="endpointInput" type="url" placeholder="https://your-proxy.example.com/v1/chat/completions">
-          </div>
-
-          <div class="field">
-            <label for="topicInput">題目主題或使用場景</label>
-            <textarea id="topicInput" placeholder="例如：大學生使用 AI 做研究、主管訓練團隊提問、創業者驗證產品想法"></textarea>
-          </div>
-
-          <label class="check-field" for="rememberKey">
-            <input id="rememberKey" type="checkbox">
-            記住 API key 在這台瀏覽器
-          </label>
-
-          <div class="action-row" style="padding:0">
-            <button class="btn primary" id="generateBtn" type="button">產出新題</button>
-            <button class="btn secondary" id="clearGeneratedBtn" type="button">清除 AI 題目</button>
-          </div>
-
-          <div class="generator-note">
-            預設一次產生 10 題，最多 30 題。品質引擎會先要求模型多產生候選題，再檢查選項長度、最佳答案是否過於明顯、評分理由是否完整；可修正的題會本地校準，不合格的題會自動重試補足。雲端 API key 會從這個瀏覽器直接送到你選擇的供應商。本機端點可填 base URL，例如 http://127.0.0.1:11123/v1，頁面會自動補成 /chat/completions；若瀏覽器擋住 localhost 請求，通常需要在本機模型服務開啟 CORS。若勾選記住，key 會以純文字存在這台瀏覽器的 localStorage。
-          </div>
-          <div class="ai-status" id="aiStatus" role="status" aria-live="polite"></div>
-          <div class="quality-report" id="qualityReport" aria-live="polite"></div>
-        </section>
-
-        <section class="panel library" aria-labelledby="libraryTitle">
-          <div class="section-head" style="padding:0">
-            <div>
-              <p class="eyebrow">題庫管理</p>
-              <h3 id="libraryTitle">保存、編輯與搬運 AI 題庫</h3>
-              <p>LLM 生成題庫會自動保存在這台瀏覽器。你可以刪題、改題、改分數，也可以匯出 JSON 分享或備份後再匯入。</p>
-            </div>
-          </div>
-
-          <div class="action-row" style="padding:0">
-            <button class="btn secondary" id="exportLessonsBtn" type="button">匯出 JSON</button>
-            <button class="btn secondary" id="importLessonsBtn" type="button">匯入 JSON</button>
-            <input class="file-input" id="importLessonsInput" type="file" accept="application/json,.json">
-          </div>
-
-          <div class="library-grid">
-            <div class="field">
-              <label for="lessonManagerSelect">已保存 AI 題庫</label>
-              <select class="library-list" id="lessonManagerSelect" size="8"></select>
-              <div class="library-status" id="libraryStatus">目前沒有 AI 題庫。先生成或匯入題庫。</div>
-            </div>
-
-            <div class="library-editor" id="libraryEditor">
-              <div class="field">
-                <label for="managerTitleInput">題目標題</label>
-                <input id="managerTitleInput" type="text" autocomplete="off">
-              </div>
-              <div class="field">
-                <label for="managerScenarioInput">場景</label>
-                <textarea id="managerScenarioInput"></textarea>
-              </div>
-              <div class="field">
-                <label for="managerWeakInput">待改寫弱問題</label>
-                <textarea id="managerWeakInput"></textarea>
-              </div>
-              <div class="choice-editor-list" id="choiceEditorList"></div>
-              <div class="field">
-                <label for="managerExplanationInput">解析</label>
-                <textarea id="managerExplanationInput"></textarea>
-              </div>
-              <div class="action-row" style="padding:0">
-                <button class="btn primary" id="saveManagedLessonBtn" type="button">儲存編輯</button>
-                <button class="btn warn" id="deleteManagedLessonBtn" type="button">刪除這題</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel scenario" aria-labelledby="scenarioTitle">
-          <div>
-            <p class="eyebrow">辨識訓練</p>
-            <h2 id="scenarioTitle"></h2>
-            <p id="scenarioText"></p>
-          </div>
-          <div class="round-chip">
-            <span id="roundNumber">第 1 題</span>
-            <span id="roundTotal">共 6 題</span>
-          </div>
-        </section>
-
-        <section class="panel" aria-labelledby="choiceTitle">
-          <div class="section-head">
-            <div>
-              <h3 id="choiceTitle">選出最好的問題</h3>
-              <p>好的問題通常有目的、情境、邊界、思考深度與行動方向。</p>
-            </div>
-          </div>
-          <div class="choices" id="choices"></div>
-          <div class="action-row">
-            <button class="btn primary" id="checkBtn" type="button">提交判斷</button>
-            <button class="btn secondary" id="nextBtn" type="button" disabled>下一題</button>
-            <button class="btn warn" id="resetBtn" type="button">重置進度</button>
-          </div>
-          <div class="feedback" id="feedback">
-            <div class="feedback-grid">
-              <div class="result-box">
-                <h4 id="resultTitle"></h4>
-                <p id="resultText"></p>
-              </div>
-              <div class="result-box">
-                <h4>本題最佳問題的結構</h4>
-                <div class="rubric-list" id="rubricList"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel rewrite" aria-labelledby="rewriteTitle">
-          <div>
-            <p class="eyebrow">改寫訓練</p>
-            <h3 id="rewriteTitle">把弱問題升級</h3>
-          </div>
-          <div class="rewrite-target">
-            <span>待改寫問題</span>
-            <div id="weakQuestion"></div>
-          </div>
-          <textarea id="rewriteInput" placeholder="把它改寫成更具體、更有情境、更能導向判斷或行動的問題。"></textarea>
-          <div class="action-row" style="padding:0">
-            <button class="btn primary" id="scoreRewriteBtn" type="button">AI 教練評估</button>
-            <button class="btn secondary" id="localScoreRewriteBtn" type="button">本地快速評分</button>
-            <button class="btn secondary" id="copyBtn" type="button">複製我的問題</button>
-          </div>
-          <div class="ai-status" id="coachStatus" role="status" aria-live="polite"></div>
-          <div class="rewrite-result" id="rewriteResult">
-            <h4 id="rewriteScoreTitle"></h4>
-            <p class="coach-summary" id="coachSummary"></p>
-            <ul id="rewriteTips"></ul>
-            <div class="coach-dimensions" id="coachDimensions"></div>
-            <div class="coach-section">
-              <h4>教練追問</h4>
-              <ul id="coachFollowUps"></ul>
-            </div>
-            <div class="coach-section">
-              <h4>三版本比較</h4>
-              <div class="comparison-grid">
-                <div class="comparison-card">
-                  <span>原弱問題</span>
-                  <p id="compareWeak"></p>
+      <section class="app-view active" id="view-training" role="tabpanel" aria-labelledby="tab-training" data-view="training">
+        <div class="workspace training-workspace">
+          <div class="training-dashboard">
+            <section class="panel training-path" aria-labelledby="trainingPathTitle">
+              <div class="training-head">
+                <div>
+                  <p class="eyebrow">個人化訓練路徑</p>
+                  <h3 id="trainingPathTitle">今日 10 分鐘訓練</h3>
+                  <p id="trainingGoalText">系統會根據能力模型安排今天最值得練的一輪。</p>
                 </div>
-                <div class="comparison-card">
-                  <span>我的改寫</span>
-                  <p id="compareUser"></p>
+                <div class="training-time">
+                  10 分鐘
+                  <span id="trainingTargetText">等待開始</span>
                 </div>
-                <div class="comparison-card">
-                  <span>AI 示範改寫</span>
-                  <p id="compareModel"></p>
+              </div>
+
+              <div class="training-actions">
+                <button class="btn primary" id="startTrainingBtn" type="button">開始今日 10 分鐘訓練</button>
+                <button class="btn secondary" id="focusTrainingBtn" type="button">前往目前步驟</button>
+                <button class="btn warn" id="resetTrainingBtn" type="button">重開今日訓練</button>
+              </div>
+
+              <div class="training-grid">
+                <div class="training-card">
+                  <strong id="trainingGoalTitle">今日目標</strong>
+                  <p id="trainingReasonText">先累積一題辨識訓練或一次 AI 教練評估，系統會自動校準你的訓練路徑。</p>
+                </div>
+                <div class="path-steps" id="trainingSteps"></div>
+              </div>
+
+              <div class="training-summary" id="trainingSummary" aria-live="polite"></div>
+
+              <div class="training-card">
+                <strong>最近 7 次訓練</strong>
+                <div class="session-history" id="trainingHistory"></div>
+              </div>
+            </section>
+
+            <section class="panel weekly-snapshot" aria-labelledby="weeklySnapshotTitle">
+              <div class="weekly-head">
+                <div>
+                  <p class="eyebrow">本週狀態</p>
+                  <h3 id="weeklySnapshotTitle">今天練完後會怎樣</h3>
+                  <p id="weeklySnapshotText">完成一輪訓練後，這裡會即時更新本週節奏。</p>
+                </div>
+                <div class="training-time">
+                  7 天
+                  <span id="weeklySnapshotWindow">等待資料</span>
+                </div>
+              </div>
+              <div class="weekly-scoreboard">
+                <div class="model-chip">
+                  <span>連續天數</span>
+                  <strong id="weeklySnapshotStreak">0 天</strong>
+                </div>
+                <div class="model-chip">
+                  <span>完成天數</span>
+                  <strong id="weeklySnapshotCompleted">0/7</strong>
+                </div>
+                <div class="model-chip">
+                  <span>仍最弱</span>
+                  <strong id="weeklySnapshotWeak">--</strong>
+                </div>
+                <div class="model-chip">
+                  <span>成效變化</span>
+                  <strong id="weeklySnapshotTrend">等待資料</strong>
+                </div>
+              </div>
+              <button class="btn secondary" id="openProgressViewBtn" type="button">查看本週成效曲線</button>
+            </section>
+          </div>
+
+          <section class="panel scenario" aria-labelledby="scenarioTitle">
+            <div>
+              <p class="eyebrow">辨識訓練</p>
+              <h2 id="scenarioTitle"></h2>
+              <p id="scenarioText"></p>
+            </div>
+            <div class="round-chip">
+              <span id="roundNumber">第 1 題</span>
+              <span id="roundTotal">共 6 題</span>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="choiceTitle">
+            <div class="section-head">
+              <div>
+                <h3 id="choiceTitle">選出最好的問題</h3>
+                <p>好的問題通常有目的、情境、邊界、思考深度與行動方向。</p>
+              </div>
+            </div>
+            <div class="choices" id="choices"></div>
+            <div class="action-row">
+              <button class="btn primary" id="checkBtn" type="button">提交判斷</button>
+              <button class="btn secondary" id="nextBtn" type="button" disabled>下一題</button>
+              <button class="btn warn" id="resetBtn" type="button">重置進度</button>
+            </div>
+            <div class="feedback" id="feedback">
+              <div class="feedback-grid">
+                <div class="result-box">
+                  <h4 id="resultTitle"></h4>
+                  <p id="resultText"></p>
+                </div>
+                <div class="result-box">
+                  <h4>本題最佳問題的結構</h4>
+                  <div class="rubric-list" id="rubricList"></div>
                 </div>
               </div>
             </div>
+          </section>
+
+          <section class="panel rewrite" aria-labelledby="rewriteTitle">
+            <div>
+              <p class="eyebrow">改寫訓練</p>
+              <h3 id="rewriteTitle">把弱問題升級</h3>
+            </div>
+            <div class="rewrite-target">
+              <span>待改寫問題</span>
+              <div id="weakQuestion"></div>
+            </div>
+            <textarea id="rewriteInput" placeholder="把它改寫成更具體、更有情境、更能導向判斷或行動的問題。"></textarea>
+            <div class="action-row" style="padding:0">
+              <button class="btn primary" id="scoreRewriteBtn" type="button">AI 教練評估</button>
+              <button class="btn secondary" id="localScoreRewriteBtn" type="button">本地快速評分</button>
+              <button class="btn secondary" id="copyBtn" type="button">複製我的問題</button>
+            </div>
+            <div class="ai-status" id="coachStatus" role="status" aria-live="polite"></div>
+            <div class="rewrite-result" id="rewriteResult">
+              <h4 id="rewriteScoreTitle"></h4>
+              <p class="coach-summary" id="coachSummary"></p>
+              <ul id="rewriteTips"></ul>
+              <div class="coach-dimensions" id="coachDimensions"></div>
+              <div class="coach-section">
+                <h4>教練追問</h4>
+                <ul id="coachFollowUps"></ul>
+              </div>
+              <div class="coach-section">
+                <h4>三版本比較</h4>
+                <div class="comparison-grid">
+                  <div class="comparison-card">
+                    <span>原弱問題</span>
+                    <p id="compareWeak"></p>
+                  </div>
+                  <div class="comparison-card">
+                    <span>我的改寫</span>
+                    <p id="compareUser"></p>
+                  </div>
+                  <div class="comparison-card">
+                    <span>AI 示範改寫</span>
+                    <p id="compareModel"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="app-view" id="view-progress" role="tabpanel" aria-labelledby="tab-progress" data-view="progress" hidden>
+        <div class="workspace">
+          <section class="panel weekly-cycle" aria-labelledby="weeklyCycleTitle">
+            <div class="weekly-head">
+              <div>
+                <p class="eyebrow">7 天訓練週期</p>
+                <h3 id="weeklyCycleTitle">本週訓練概況</h3>
+                <p id="weeklyCycleText">完成每日訓練後，這裡會把節奏、進步與下一次方向串起來。</p>
+              </div>
+              <div class="training-time">
+                7 天
+                <span id="weeklyCycleWindow">等待資料</span>
+              </div>
+            </div>
+
+            <div class="weekly-scoreboard">
+              <div class="model-chip">
+                <span>連續天數</span>
+                <strong id="weeklyStreak">0</strong>
+              </div>
+              <div class="model-chip">
+                <span>完成天數</span>
+                <strong id="weeklyCompletedDays">0/7</strong>
+              </div>
+              <div class="model-chip">
+                <span>本週最進步</span>
+                <strong id="weeklyImprovedDim">--</strong>
+              </div>
+              <div class="model-chip">
+                <span>仍最弱</span>
+                <strong id="weeklyWeakDim">--</strong>
+              </div>
+            </div>
+
+            <div class="weekly-layout">
+              <div class="training-card">
+                <strong>最近 7 天狀態</strong>
+                <div class="week-strip">
+                  <div class="week-days" id="weeklyDays"></div>
+                </div>
+              </div>
+              <div class="training-card recommendation-card">
+                <strong>下一次訓練方向</strong>
+                <p id="weeklyRecommendation">先完成一輪今日訓練，系統會開始推薦下一次要補強的維度。</p>
+                <button class="btn primary" id="startRecommendedTrainingBtn" type="button">開始推薦訓練</button>
+              </div>
+            </div>
+
+            <div class="weekly-layout">
+              <div class="training-card chart-card">
+                <div class="chart-head">
+                  <strong>成效曲線</strong>
+                  <span id="weeklyTrendLabel">等待資料</span>
+                </div>
+                <div class="performance-chart" id="weeklyChart" aria-label="最近 7 天訓練分數曲線"></div>
+              </div>
+              <div class="training-card">
+                <strong>六維趨勢</strong>
+                <div class="dimension-trends" id="weeklyDimensionTrends"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="app-view" id="view-ability" role="tabpanel" aria-labelledby="tab-ability" data-view="ability" hidden>
+        <div class="view-grid ability-grid">
+          <div class="workspace">
+            <section class="panel intro" aria-labelledby="projectIntroTitle">
+              <div>
+                <p class="eyebrow">Project</p>
+                <h2 id="projectIntroTitle">用問題驅動思考，而不是只追逐答案</h2>
+              </div>
+              <p>
+                Questionsfactory 是一個單頁訓練工具，目標是幫使用者建立「判斷問題品質」的能力。它透過辨識、解析、改寫、AI 教練回饋與個人化能力模型，訓練使用者看見目的、情境、邊界、深度、行動與假設。
+              </p>
+              <div class="intro-points" aria-label="項目核心能力">
+                <div class="intro-point">
+                  <strong>辨識好問題</strong>
+                  <span>從多個相似選項中判斷哪個問題更能推動思考。</span>
+                </div>
+                <div class="intro-point">
+                  <strong>升級弱問題</strong>
+                  <span>把空泛、封閉或失焦的問題改寫成可行動的問題。</span>
+                </div>
+                <div class="intro-point">
+                  <strong>AI 問題教練</strong>
+                  <span>支援雲端與本機模型，評改你的問題並提出追問。</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel side-panel">
+              <h3>能力模型</h3>
+              <div class="model-summary" id="modelSummary"></div>
+              <div class="mastery" id="mastery"></div>
+              <div class="model-action">
+                <button class="btn primary" id="targetWeaknessBtn" type="button">生成弱項題庫</button>
+                <p class="model-action-note">系統會根據目前最弱維度填入主題並呼叫你選擇的 LLM。</p>
+              </div>
+            </section>
+
+            <section class="panel side-panel">
+              <h3>目前診斷</h3>
+              <div class="insight" id="diagnosis"></div>
+            </section>
           </div>
-        </section>
-      </div>
 
-      <aside class="sidebar" aria-label="能力面板">
-        <section class="panel side-panel">
-          <h3>能力模型</h3>
-          <div class="model-summary" id="modelSummary"></div>
-          <div class="mastery" id="mastery"></div>
-          <div class="model-action">
-            <button class="btn primary" id="targetWeaknessBtn" type="button">生成弱項題庫</button>
-            <p class="model-action-note">系統會根據目前最弱維度填入主題並呼叫你選擇的 LLM。</p>
+          <div class="workspace">
+            <section class="panel side-panel">
+              <h3>最近紀錄</h3>
+              <div class="history" id="history"></div>
+            </section>
+
+            <section class="panel side-panel">
+              <h3>教練紀錄</h3>
+              <p class="coach-history-note">保存每次改寫評估，方便回看自己的提問能力變化。</p>
+              <div class="history" id="coachHistory"></div>
+            </section>
+
+            <section class="panel side-panel">
+              <h3>分享與部署</h3>
+              <div class="share-url">
+                <strong>GitHub Pages</strong>
+                <span id="shareUrlText"></span>
+              </div>
+              <div class="share-actions">
+                <button class="btn primary" id="copyShareBtn" type="button">複製分享連結</button>
+                <a class="btn secondary" id="openShareLink" href="https://iks9245.github.io/Questionsfactory/" target="_blank" rel="noopener">開啟公開頁</a>
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="panel side-panel">
-          <h3>目前診斷</h3>
-          <div class="insight" id="diagnosis"></div>
-        </section>
+      <section class="app-view" id="view-library" role="tabpanel" aria-labelledby="tab-library" data-view="library" hidden>
+        <div class="workspace">
+          <section class="panel generator" aria-labelledby="generatorTitle">
+            <div class="section-head" style="padding:0">
+              <div>
+                <p class="eyebrow">AI 出題</p>
+                <h3 id="generatorTitle">用 LLM 產出新問題</h3>
+                <p>選擇供應商、填入自己的 API key，產生一組新的辨識題與改寫題。</p>
+              </div>
+            </div>
 
-        <section class="panel side-panel">
-          <h3>最近紀錄</h3>
-          <div class="history" id="history"></div>
-        </section>
+            <div class="generator-grid">
+              <div class="field">
+                <label for="providerSelect">供應商</label>
+                <select id="providerSelect">
+                  <option value="openai">OpenAI Responses</option>
+                  <option value="gemini">Google Gemini</option>
+                  <option value="anthropic">Anthropic Claude</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="omlx">OMLX / MLX server</option>
+                  <option value="local-compatible">Local OpenAI-compatible</option>
+                  <option value="ollama">Ollama native</option>
+                  <option value="compatible">OpenAI-compatible</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="modelInput">模型</label>
+                <input id="modelInput" type="text" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="lessonCountInput">題庫數量</label>
+                <input id="lessonCountInput" type="number" min="10" max="30" step="1" value="10">
+              </div>
+              <div class="field" id="apiKeyField">
+                <label for="apiKeyInput" id="apiKeyLabel">API key</label>
+                <input id="apiKeyInput" type="password" autocomplete="off" placeholder="只在你的瀏覽器中使用">
+              </div>
+            </div>
 
-        <section class="panel side-panel">
-          <h3>教練紀錄</h3>
-          <p class="coach-history-note">保存每次改寫評估，方便回看自己的提問能力變化。</p>
-          <div class="history" id="coachHistory"></div>
-        </section>
+            <div class="field custom-endpoint hidden" id="endpointField">
+              <label for="endpointInput">自訂端點</label>
+              <input id="endpointInput" type="url" placeholder="https://your-proxy.example.com/v1/chat/completions">
+            </div>
 
-        <section class="panel side-panel">
-          <h3>分享與部署</h3>
-          <div class="share-url">
-            <strong>GitHub Pages</strong>
-            <span id="shareUrlText"></span>
-          </div>
-          <div class="share-actions">
-            <button class="btn primary" id="copyShareBtn" type="button">複製分享連結</button>
-            <a class="btn secondary" id="openShareLink" href="https://iks9245.github.io/Questionsfactory/" target="_blank" rel="noopener">開啟公開頁</a>
-          </div>
-        </section>
+            <div class="field">
+              <label for="topicInput">題目主題或使用場景</label>
+              <textarea id="topicInput" placeholder="例如：大學生使用 AI 做研究、主管訓練團隊提問、創業者驗證產品想法"></textarea>
+            </div>
 
-      </aside>
+            <label class="check-field" for="rememberKey">
+              <input id="rememberKey" type="checkbox">
+              記住 API key 在這台瀏覽器
+            </label>
+
+            <div class="action-row" style="padding:0">
+              <button class="btn primary" id="generateBtn" type="button">產出新題</button>
+              <button class="btn secondary" id="clearGeneratedBtn" type="button">清除 AI 題目</button>
+            </div>
+
+            <div class="generator-note">
+              預設一次產生 10 題，最多 30 題。品質引擎會先要求模型多產生候選題，再檢查選項長度、最佳答案是否過於明顯、評分理由是否完整；可修正的題會本地校準，不合格的題會自動重試補足。雲端 API key 會從這個瀏覽器直接送到你選擇的供應商。本機端點可填 base URL，例如 http://127.0.0.1:11123/v1，頁面會自動補成 /chat/completions；若瀏覽器擋住 localhost 請求，通常需要在本機模型服務開啟 CORS。若勾選記住，key 會以純文字存在這台瀏覽器的 localStorage。
+            </div>
+            <div class="ai-status" id="aiStatus" role="status" aria-live="polite"></div>
+            <div class="quality-report" id="qualityReport" aria-live="polite"></div>
+          </section>
+
+          <section class="panel library" aria-labelledby="libraryTitle">
+            <div class="section-head" style="padding:0">
+              <div>
+                <p class="eyebrow">題庫管理</p>
+                <h3 id="libraryTitle">保存、編輯與搬運 AI 題庫</h3>
+                <p>LLM 生成題庫會自動保存在這台瀏覽器。你可以刪題、改題、改分數，也可以匯出 JSON 分享或備份後再匯入。</p>
+              </div>
+            </div>
+
+            <div class="action-row" style="padding:0">
+              <button class="btn secondary" id="exportLessonsBtn" type="button">匯出 JSON</button>
+              <button class="btn secondary" id="importLessonsBtn" type="button">匯入 JSON</button>
+              <input class="file-input" id="importLessonsInput" type="file" accept="application/json,.json">
+            </div>
+
+            <div class="library-grid">
+              <div class="field">
+                <label for="lessonManagerSelect">已保存 AI 題庫</label>
+                <select class="library-list" id="lessonManagerSelect" size="8"></select>
+                <div class="library-status" id="libraryStatus">目前沒有 AI 題庫。先生成或匯入題庫。</div>
+              </div>
+
+              <div class="library-editor" id="libraryEditor">
+                <div class="field">
+                  <label for="managerTitleInput">題目標題</label>
+                  <input id="managerTitleInput" type="text" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label for="managerScenarioInput">場景</label>
+                  <textarea id="managerScenarioInput"></textarea>
+                </div>
+                <div class="field">
+                  <label for="managerWeakInput">待改寫弱問題</label>
+                  <textarea id="managerWeakInput"></textarea>
+                </div>
+                <div class="choice-editor-list" id="choiceEditorList"></div>
+                <div class="field">
+                  <label for="managerExplanationInput">解析</label>
+                  <textarea id="managerExplanationInput"></textarea>
+                </div>
+                <div class="action-row" style="padding:0">
+                  <button class="btn primary" id="saveManagedLessonBtn" type="button">儲存編輯</button>
+                  <button class="btn warn" id="deleteManagedLessonBtn" type="button">刪除這題</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -2505,8 +2643,38 @@
       copyShareBtn: document.getElementById("copyShareBtn"),
       openShareLink: document.getElementById("openShareLink"),
       shareUrlText: document.getElementById("shareUrlText"),
+      viewTabs: [...document.querySelectorAll(".view-tab")],
+      appViews: [...document.querySelectorAll(".app-view")],
+      weeklySnapshotText: document.getElementById("weeklySnapshotText"),
+      weeklySnapshotWindow: document.getElementById("weeklySnapshotWindow"),
+      weeklySnapshotStreak: document.getElementById("weeklySnapshotStreak"),
+      weeklySnapshotCompleted: document.getElementById("weeklySnapshotCompleted"),
+      weeklySnapshotWeak: document.getElementById("weeklySnapshotWeak"),
+      weeklySnapshotTrend: document.getElementById("weeklySnapshotTrend"),
+      openProgressViewBtn: document.getElementById("openProgressViewBtn"),
       toast: document.getElementById("toast")
     };
+
+    function switchAppView(view, options = {}) {
+      const target = ["training", "progress", "ability", "library"].includes(view) ? view : "training";
+      const scroll = Boolean(options.scroll);
+
+      els.viewTabs.forEach((tab) => {
+        const active = tab.dataset.viewTarget === target;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+      });
+
+      els.appViews.forEach((viewEl) => {
+        const active = viewEl.dataset.view === target;
+        viewEl.classList.toggle("active", active);
+        viewEl.hidden = !active;
+      });
+
+      if (scroll) {
+        window.scrollTo?.({ top: 0, behavior: "smooth" });
+      }
+    }
 
     function loadStats() {
       try {
@@ -3518,6 +3686,7 @@
     }
 
     function focusTrainingStep() {
+      switchAppView("training");
       const step = getNextTrainingStep(activeTraining);
       if (step === "recognition") {
         document.getElementById("choiceTitle")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -4004,6 +4173,15 @@
       els.weeklyTrendLabel.textContent = formatWeeklyTrendLabel(week.trendDelta);
       els.weeklyRecommendation.textContent = week.recommendation;
 
+      els.weeklySnapshotWindow.textContent = `${formatWeekDate(firstDay)} - ${formatWeekDate(lastDay)}`;
+      els.weeklySnapshotText.textContent = week.completedDays
+        ? `本週已完成 ${week.completedDays} 天；今天再完成一輪，曲線會立刻更新。`
+        : "先完成一輪今日訓練，系統會建立本週節奏和下一次方向。";
+      els.weeklySnapshotStreak.textContent = `${week.streak} 天`;
+      els.weeklySnapshotCompleted.textContent = `${week.completedDays}/${weeklyCycleDays}`;
+      els.weeklySnapshotWeak.textContent = weakText;
+      els.weeklySnapshotTrend.textContent = formatWeeklyTrendLabel(week.trendDelta);
+
       renderWeeklyDays(week.days);
       renderWeeklyChart(week.days);
       renderWeeklyDimensionTrends(week.dimensionTrends);
@@ -4147,6 +4325,7 @@
     }
 
     async function generateWeaknessLessons() {
+      switchAppView("library");
       const profile = buildAbilityProfile();
       const weakNames = profile.weakest.map((dimension) => dimension.label).join("、") || "六維基礎";
       els.topicInput.value = buildWeaknessTrainingTopic(profile);
@@ -5592,8 +5771,12 @@
     els.importLessonsInput.addEventListener("change", importGeneratedLessonsFromFile);
     els.shareBtn.addEventListener("click", shareProject);
     els.copyShareBtn.addEventListener("click", copyShareLink);
+    els.viewTabs.forEach((tab) => {
+      tab.addEventListener("click", () => switchAppView(tab.dataset.viewTarget, { scroll: true }));
+    });
     els.startTrainingBtn.addEventListener("click", () => startTodayTraining(false));
     els.startRecommendedTrainingBtn.addEventListener("click", () => startTodayTraining(false));
+    els.openProgressViewBtn.addEventListener("click", () => switchAppView("progress", { scroll: true }));
     els.focusTrainingBtn.addEventListener("click", focusTrainingStep);
     els.resetTrainingBtn.addEventListener("click", resetTodayTraining);
     els.targetWeaknessBtn.addEventListener("click", generateWeaknessLessons);
@@ -5609,6 +5792,7 @@
 
     initGeneratorSettings();
     initShareUi();
+    switchAppView("training");
     renderLibraryManager();
     renderCoachHistory();
     render();
