@@ -542,6 +542,204 @@
       line-height: 1.55;
     }
 
+    .training-path {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .training-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .training-head h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .training-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .training-time {
+      min-width: 108px;
+      border: 1px solid #c8d7e4;
+      border-radius: 8px;
+      background: var(--panel-strong);
+      padding: 10px;
+      text-align: center;
+      color: var(--teal-dark);
+      font-weight: 800;
+    }
+
+    .training-time span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .training-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .training-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbfd;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .training-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .training-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .path-steps {
+      display: grid;
+      gap: 8px;
+    }
+
+    .path-step {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .path-step-index {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #edf2f7;
+      color: #425466;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .path-step.done .path-step-index {
+      background: #e7f5ef;
+      color: var(--teal-dark);
+    }
+
+    .path-step.active {
+      border-color: var(--teal);
+      background: #eff9f7;
+    }
+
+    .path-step-title {
+      min-width: 0;
+    }
+
+    .path-step-title strong {
+      display: block;
+      margin: 0 0 2px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .path-step-title span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .path-step-state {
+      border-radius: 999px;
+      background: #edf2f7;
+      color: #425466;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .path-step.done .path-step-state {
+      background: #e7f5ef;
+      color: var(--teal-dark);
+    }
+
+    .training-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0;
+    }
+
+    .training-summary {
+      display: none;
+      border: 1px solid #c9dfdc;
+      border-radius: 8px;
+      background: #eff9f7;
+      padding: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .training-summary.visible {
+      display: block;
+    }
+
+    .training-summary strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .session-history {
+      display: grid;
+      gap: 8px;
+    }
+
+    .session-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #eef2f6;
+      padding: 9px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .session-row:last-child {
+      border-bottom: 0;
+    }
+
+    .session-row strong {
+      color: var(--ink);
+    }
+
     .library {
       padding: 20px;
       display: grid;
@@ -1088,12 +1286,27 @@
       .library-grid,
       .choice-editor-head,
       .quality-summary,
+      .training-head,
+      .training-grid,
       .model-summary,
       .coach-dimensions,
       .comparison-grid,
       .intro-points,
       .sidebar {
         grid-template-columns: 1fr;
+      }
+
+      .training-head {
+        display: grid;
+      }
+
+      .path-step {
+        grid-template-columns: 28px 1fr;
+      }
+
+      .path-step-state {
+        grid-column: 2;
+        justify-self: start;
       }
     }
   </style>
@@ -1150,6 +1363,41 @@
               <strong>AI 問題教練</strong>
               <span>支援雲端與本機模型，評改你的問題並提出追問。</span>
             </div>
+          </div>
+        </section>
+
+        <section class="panel training-path" aria-labelledby="trainingPathTitle">
+          <div class="training-head">
+            <div>
+              <p class="eyebrow">個人化訓練路徑</p>
+              <h3 id="trainingPathTitle">今日 10 分鐘訓練</h3>
+              <p id="trainingGoalText">系統會根據能力模型安排今天最值得練的一輪。</p>
+            </div>
+            <div class="training-time">
+              10 分鐘
+              <span id="trainingTargetText">等待開始</span>
+            </div>
+          </div>
+
+          <div class="training-grid">
+            <div class="training-card">
+              <strong id="trainingGoalTitle">今日目標</strong>
+              <p id="trainingReasonText">先累積一題辨識訓練或一次 AI 教練評估，系統會自動校準你的訓練路徑。</p>
+            </div>
+            <div class="path-steps" id="trainingSteps"></div>
+          </div>
+
+          <div class="training-actions">
+            <button class="btn primary" id="startTrainingBtn" type="button">開始今日 10 分鐘訓練</button>
+            <button class="btn secondary" id="focusTrainingBtn" type="button">前往目前步驟</button>
+            <button class="btn warn" id="resetTrainingBtn" type="button">重開今日訓練</button>
+          </div>
+
+          <div class="training-summary" id="trainingSummary" aria-live="polite"></div>
+
+          <div class="training-card">
+            <strong>最近 7 次訓練</strong>
+            <div class="session-history" id="trainingHistory"></div>
           </div>
         </section>
 
@@ -1408,6 +1656,9 @@
     const generatedLessonsKey = "question-gym-generated-lessons";
     const aiSettingsKey = "question-gym-ai-settings";
     const coachHistoryKey = "question-gym-coach-history";
+    const trainingSessionsKey = "question-gym-training-sessions";
+    const activeTrainingKey = "question-gym-active-training";
+    const trainingHistoryDisplayLimit = 7;
     const publicShareUrl = "https://iks9245.github.io/Questionsfactory/";
     const qualityEngine = {
       minLessons: 10,
@@ -1889,6 +2140,8 @@
     let stats = loadStats();
     let aiSettings = loadAiSettings();
     let coachHistory = loadCoachHistory();
+    let trainingSessions = loadTrainingSessions();
+    let activeTraining = loadActiveTraining();
     let selectedLibraryIndex = 0;
 
     const els = {
@@ -1922,6 +2175,16 @@
       compareWeak: document.getElementById("compareWeak"),
       compareUser: document.getElementById("compareUser"),
       compareModel: document.getElementById("compareModel"),
+      trainingGoalText: document.getElementById("trainingGoalText"),
+      trainingTargetText: document.getElementById("trainingTargetText"),
+      trainingGoalTitle: document.getElementById("trainingGoalTitle"),
+      trainingReasonText: document.getElementById("trainingReasonText"),
+      trainingSteps: document.getElementById("trainingSteps"),
+      trainingSummary: document.getElementById("trainingSummary"),
+      trainingHistory: document.getElementById("trainingHistory"),
+      startTrainingBtn: document.getElementById("startTrainingBtn"),
+      focusTrainingBtn: document.getElementById("focusTrainingBtn"),
+      resetTrainingBtn: document.getElementById("resetTrainingBtn"),
       modelSummary: document.getElementById("modelSummary"),
       mastery: document.getElementById("mastery"),
       diagnosis: document.getElementById("diagnosis"),
@@ -2042,6 +2305,79 @@
       saveCoachHistory();
       renderCoachHistory();
       renderStats();
+    }
+
+    function loadTrainingSessions() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(trainingSessionsKey));
+        if (!Array.isArray(saved)) return [];
+        return saved.map(sanitizeTrainingSession).filter(Boolean);
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTrainingSessions() {
+      localStorage.setItem(trainingSessionsKey, JSON.stringify(dedupeTrainingSessions(trainingSessions)));
+    }
+
+    function loadActiveTraining() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(activeTrainingKey));
+        return sanitizeTrainingSession(saved);
+      } catch {
+        return null;
+      }
+    }
+
+    function saveActiveTraining() {
+      if (!activeTraining) {
+        localStorage.removeItem(activeTrainingKey);
+        return;
+      }
+      localStorage.setItem(activeTrainingKey, JSON.stringify(activeTraining));
+    }
+
+    function sanitizeTrainingSession(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      const targetKeys = Array.isArray(raw.targetKeys)
+        ? raw.targetKeys.filter((key) => dimensions.some((dimension) => dimension.key === key)).slice(0, 2)
+        : [];
+      const targetLabels = targetKeys.map((key) => dimensions.find((dimension) => dimension.key === key)?.label || key);
+      return {
+        id: asText(raw.id) || `training-${Date.now()}`,
+        dateKey: asText(raw.dateKey) || getTodayKey(),
+        startedAt: asText(raw.startedAt) || new Date().toISOString(),
+        completedAt: asText(raw.completedAt),
+        targetKeys,
+        targetLabels,
+        lessonIndex: clampInt(raw.lessonIndex, 0, Math.max(0, lessons.length - 1)),
+        goalTitle: asText(raw.goalTitle) || "今日訓練",
+        reason: asText(raw.reason),
+        baselineOverall: clampInt(raw.baselineOverall, 0, 100),
+        baselineDimensions: sanitizeProfileSnapshot(raw.baselineDimensions),
+        finalOverall: clampInt(raw.finalOverall, 0, 100),
+        finalDimensions: sanitizeProfileSnapshot(raw.finalDimensions),
+        steps: {
+          recognition: Boolean(raw.steps?.recognition),
+          rewrite: Boolean(raw.steps?.rewrite),
+          coach: Boolean(raw.steps?.coach)
+        },
+        recognition: raw.recognition && typeof raw.recognition === "object" ? raw.recognition : null,
+        rewrite: raw.rewrite && typeof raw.rewrite === "object" ? raw.rewrite : null,
+        coach: raw.coach && typeof raw.coach === "object" ? raw.coach : null,
+        improvedKeys: Array.isArray(raw.improvedKeys) ? raw.improvedKeys.filter(Boolean).slice(0, 6) : [],
+        needsWorkKeys: Array.isArray(raw.needsWorkKeys) ? raw.needsWorkKeys.filter(Boolean).slice(0, 6) : [],
+        summary: asText(raw.summary)
+      };
+    }
+
+    function sanitizeProfileSnapshot(raw = {}) {
+      const safe = {};
+      dimensions.forEach((dimension) => {
+        safe[dimension.key] = clampInt(raw?.[dimension.key], 0, 100);
+      });
+      return safe;
     }
 
     function loadGeneratedLessons() {
@@ -2659,6 +2995,7 @@
       });
       stats.history = stats.history.slice(0, 6);
       saveStats();
+      recordTrainingRecognition({ lesson, selected, correct });
 
       renderChoices();
       renderFeedback(lesson, selected, correct, best);
@@ -2691,6 +3028,247 @@
     function nextQuestion() {
       currentIndex = (currentIndex + 1) % lessons.length;
       render();
+    }
+
+    function getTodayKey(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function createTrainingSession(profile = buildAbilityProfile()) {
+      const targetDimensions = getTrainingTargetDimensions(profile);
+      const lessonIndex = pickTrainingLesson(profile, targetDimensions);
+      const labels = targetDimensions.map((dimension) => dimension.label);
+      const baselineDimensions = getProfileSnapshot(profile);
+      const goalTitle = labels.length
+        ? `補強「${labels.join(" / ")}」`
+        : "建立六維基礎";
+      const reason = buildTrainingReason(profile, targetDimensions, lessonIndex);
+
+      return {
+        id: `training-${Date.now()}`,
+        dateKey: getTodayKey(),
+        startedAt: new Date().toISOString(),
+        completedAt: "",
+        targetKeys: targetDimensions.map((dimension) => dimension.key),
+        targetLabels: labels,
+        lessonIndex,
+        goalTitle,
+        reason,
+        baselineOverall: profile.overall || 0,
+        baselineDimensions,
+        finalOverall: 0,
+        finalDimensions: {},
+        steps: {
+          recognition: false,
+          rewrite: false,
+          coach: false
+        },
+        recognition: null,
+        rewrite: null,
+        coach: null,
+        improvedKeys: [],
+        needsWorkKeys: [],
+        summary: ""
+      };
+    }
+
+    function getTrainingTargetDimensions(profile) {
+      if (profile?.weakest?.length) return profile.weakest.slice(0, 2);
+      return dimensions.slice(0, 2);
+    }
+
+    function getProfileSnapshot(profile) {
+      const snapshot = {};
+      dimensions.forEach((dimension) => {
+        const item = profile.dimensions.find((entry) => entry.key === dimension.key);
+        snapshot[dimension.key] = item?.combined || 0;
+      });
+      return snapshot;
+    }
+
+    function buildTrainingReason(profile, targetDimensions, lessonIndex) {
+      const names = targetDimensions.map((dimension) => dimension.label).join("、") || "六維基礎";
+      const lesson = lessons[lessonIndex];
+      const evidence = profile.hasData
+        ? `目前模型分 ${profile.overall}，證據量為辨識 ${profile.recognitionCount} 題、教練 ${profile.coachCount} 次。`
+        : "目前資料還少，先用基礎題建立第一輪能力模型。";
+      return `${evidence} 今天先練「${names}」，安排題目：「${lesson.title}」。先做辨識，再改寫弱問題，最後交給 AI 教練評估。`;
+    }
+
+    function pickTrainingLesson(profile, targetDimensions) {
+      const targetKeys = targetDimensions.map((dimension) => dimension.key);
+      const daySeed = Number(getTodayKey().replace(/-/g, "")) || 0;
+      let bestIndex = currentIndex;
+      let bestScore = Number.NEGATIVE_INFINITY;
+
+      lessons.forEach((lesson, index) => {
+        const dimSpread = targetKeys.reduce((sum, key) => {
+          const values = lesson.choices.map((choice) => choice.dims?.[key] || 0);
+          return sum + (Math.max(...values) - Math.min(...values));
+        }, 0);
+        const weakChoice = lesson.choices
+          .slice()
+          .sort((a, b) => getTargetDimTotal(a, targetKeys) - getTargetDimTotal(b, targetKeys))[0];
+        const weakGap = targetKeys.reduce((sum, key) => sum + (5 - (weakChoice?.dims?.[key] || 0)), 0);
+        const rotation = ((index + daySeed) % Math.max(1, lessons.length)) / 100;
+        const generatedBonus = lesson.generated ? 0.4 : 0;
+        const score = dimSpread * 2 + weakGap + generatedBonus + rotation;
+        if (score > bestScore) {
+          bestScore = score;
+          bestIndex = index;
+        }
+      });
+
+      return bestIndex;
+    }
+
+    function getTargetDimTotal(choice, targetKeys) {
+      return targetKeys.reduce((sum, key) => sum + (choice.dims?.[key] || 0), 0);
+    }
+
+    function startTodayTraining(forceNew = false) {
+      if (activeTraining && !activeTraining.completedAt && !forceNew) {
+        currentIndex = clampInt(activeTraining.lessonIndex, 0, lessons.length - 1);
+        render();
+        focusTrainingStep();
+        showToast("已回到今日訓練。");
+        return;
+      }
+
+      activeTraining = createTrainingSession(buildAbilityProfile());
+      saveActiveTraining();
+      currentIndex = activeTraining.lessonIndex;
+      render();
+      renderTrainingPath(buildAbilityProfile());
+      focusTrainingStep();
+      showToast(`今日訓練已開始：${activeTraining.goalTitle}`);
+    }
+
+    function resetTodayTraining() {
+      startTodayTraining(true);
+    }
+
+    function focusTrainingStep() {
+      const step = getNextTrainingStep(activeTraining);
+      if (step === "recognition") {
+        document.getElementById("choiceTitle")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (step === "rewrite" || step === "coach") {
+        document.getElementById("rewriteTitle")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        document.getElementById("trainingPathTitle")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    function getNextTrainingStep(session) {
+      if (!session || session.completedAt) return "start";
+      if (!session.steps.recognition) return "recognition";
+      if (!session.steps.rewrite) return "rewrite";
+      if (!session.steps.coach) return "coach";
+      return "done";
+    }
+
+    function recordTrainingRecognition({ lesson, selected, correct }) {
+      if (!activeTraining || activeTraining.completedAt) return;
+      if (activeTraining.lessonIndex !== currentIndex || activeTraining.steps.recognition) return;
+      activeTraining.steps.recognition = true;
+      activeTraining.recognition = {
+        at: new Date().toISOString(),
+        lessonTitle: lesson.title,
+        selectedText: selected.text,
+        score: selected.score,
+        correct
+      };
+      saveActiveTraining();
+      renderTrainingPath(buildAbilityProfile());
+    }
+
+    function recordTrainingRewrite(text) {
+      if (!activeTraining || activeTraining.completedAt) return;
+      if (activeTraining.lessonIndex !== currentIndex) return;
+      activeTraining.steps.rewrite = true;
+      activeTraining.rewrite = {
+        at: new Date().toISOString(),
+        text
+      };
+      saveActiveTraining();
+      renderTrainingPath(buildAbilityProfile());
+    }
+
+    function recordTrainingCoach(result, source, ai = false) {
+      if (!activeTraining || activeTraining.completedAt) return;
+      if (activeTraining.lessonIndex !== currentIndex) return;
+      activeTraining.steps.coach = true;
+      activeTraining.coach = {
+        at: new Date().toISOString(),
+        score: result.overallScore,
+        source,
+        ai
+      };
+      completeTrainingIfReady();
+      saveActiveTraining();
+      renderTrainingPath(buildAbilityProfile());
+    }
+
+    function completeTrainingIfReady() {
+      if (!activeTraining || activeTraining.completedAt) return;
+      if (!activeTraining.steps.recognition || !activeTraining.steps.rewrite || !activeTraining.steps.coach) return;
+
+      const finalProfile = buildAbilityProfile();
+      const finalDimensions = getProfileSnapshot(finalProfile);
+      const improvedKeys = [];
+      const needsWorkKeys = [];
+      activeTraining.targetKeys.forEach((key) => {
+        const before = activeTraining.baselineDimensions?.[key] || 0;
+        const after = finalDimensions[key] || 0;
+        if (after - before >= 3 || after >= 80) improvedKeys.push(key);
+        if (after < 80) needsWorkKeys.push(key);
+      });
+
+      activeTraining.completedAt = new Date().toISOString();
+      activeTraining.finalOverall = finalProfile.overall || 0;
+      activeTraining.finalDimensions = finalDimensions;
+      activeTraining.improvedKeys = improvedKeys;
+      activeTraining.needsWorkKeys = needsWorkKeys;
+      activeTraining.summary = buildTrainingSummary(activeTraining);
+      trainingSessions.unshift(activeTraining);
+      trainingSessions = dedupeTrainingSessions(trainingSessions);
+      saveTrainingSessions();
+      localStorage.removeItem(activeTrainingKey);
+      activeTraining = null;
+      showToast("今日訓練完成，小結已保存。");
+    }
+
+    function dedupeTrainingSessions(sessions) {
+      const seen = new Set();
+      return sessions.filter((session) => {
+        if (!session?.id || seen.has(session.id)) return false;
+        seen.add(session.id);
+        return true;
+      });
+    }
+
+    function buildTrainingSummary(session) {
+      const targets = getDimensionLabels(session.targetKeys).join("、") || "六維基礎";
+      const improved = getDimensionLabels(session.improvedKeys);
+      const needsWork = getDimensionLabels(session.needsWorkKeys);
+      const recognitionText = session.recognition
+        ? `辨識題 ${session.recognition.correct ? "答對" : "待修正"}，選項分數 ${session.recognition.score}`
+        : "辨識題未完成";
+      const coachText = session.coach
+        ? `教練評分 ${session.coach.score}，來源 ${session.coach.source}`
+        : "教練評估未完成";
+      const improvedText = improved.length ? `本次有進步：${improved.join("、")}。` : "本次尚未看到明顯進步。";
+      const needsText = needsWork.length ? `仍需加強：${needsWork.join("、")}。` : "目標維度已達到穩定水位。";
+      return `本次目標是 ${targets}。${recognitionText}；${coachText}。${improvedText}${needsText}`;
+    }
+
+    function getDimensionLabels(keys = []) {
+      return keys
+        .map((key) => dimensions.find((dimension) => dimension.key === key)?.label)
+        .filter(Boolean);
     }
 
     function buildAbilityProfile() {
@@ -2771,6 +3349,7 @@
       els.streak.textContent = stats.streak;
 
       renderAbilityModel(profile);
+      renderTrainingPath(profile);
       renderDiagnosis(avg, profile);
       renderHistory();
     }
@@ -2812,6 +3391,116 @@
           </div>
         `;
         els.mastery.appendChild(row);
+      });
+    }
+
+    function renderTrainingPath(profile = buildAbilityProfile()) {
+      const latestSession = trainingSessions[0] || null;
+      const session = activeTraining || latestSession || createTrainingSession(profile);
+      const isActive = Boolean(activeTraining && !activeTraining.completedAt);
+      const isCompleted = Boolean(!isActive && latestSession);
+      const targetLabels = session.targetLabels?.length ? session.targetLabels : getDimensionLabels(session.targetKeys);
+      const lesson = lessons[session.lessonIndex] || lessons[currentIndex];
+
+      els.trainingGoalTitle.textContent = isCompleted ? "最近訓練小結" : `今日目標：${session.goalTitle}`;
+      els.trainingGoalText.textContent = isActive
+        ? `正在訓練 ${targetLabels.join("、") || "六維基礎"}。`
+        : isCompleted
+          ? `上次訓練已完成，可再開始一輪 10 分鐘訓練。`
+          : `系統會根據能力模型安排今天最值得練的一輪。`;
+      els.trainingTargetText.textContent = isActive ? "進行中" : isCompleted ? "已完成" : "等待開始";
+      els.trainingReasonText.textContent = session.reason || buildTrainingReason(profile, getTrainingTargetDimensions(profile), session.lessonIndex);
+
+      renderTrainingSteps(session, isActive);
+      renderTrainingSummary(session, isCompleted);
+      renderTrainingHistory();
+
+      els.startTrainingBtn.textContent = isActive ? "繼續今日 10 分鐘訓練" : "開始今日 10 分鐘訓練";
+      els.focusTrainingBtn.disabled = !isActive;
+      els.resetTrainingBtn.disabled = false;
+
+      if (isActive && lesson) {
+        els.trainingReasonText.textContent = `${session.reason} 目前題目：「${lesson.title}」。`;
+      }
+    }
+
+    function renderTrainingSteps(session, isActive) {
+      const nextStep = isActive ? getNextTrainingStep(session) : "start";
+      const stepItems = [
+        {
+          key: "recognition",
+          title: "辨識題",
+          desc: "先選出本題最佳問題，校準判斷力。"
+        },
+        {
+          key: "rewrite",
+          title: "改寫題",
+          desc: "把同一題的弱問題改成可行動版本。"
+        },
+        {
+          key: "coach",
+          title: "AI 教練評估",
+          desc: "用 AI 教練看六維診斷與追問。"
+        }
+      ];
+
+      els.trainingSteps.innerHTML = "";
+      stepItems.forEach((step, index) => {
+        const done = Boolean(session.steps?.[step.key]);
+        const active = isActive && nextStep === step.key;
+        const row = document.createElement("div");
+        row.className = `path-step${done ? " done" : ""}${active ? " active" : ""}`;
+        row.innerHTML = `
+          <span class="path-step-index">${done ? "✓" : index + 1}</span>
+          <span class="path-step-title">
+            <strong>${step.title}</strong>
+            <span>${step.desc}</span>
+          </span>
+          <span class="path-step-state">${done ? "完成" : active ? "現在" : "待完成"}</span>
+        `;
+        els.trainingSteps.appendChild(row);
+      });
+    }
+
+    function renderTrainingSummary(session, visible) {
+      const summary = session?.summary || "";
+      els.trainingSummary.classList.toggle("visible", Boolean(visible && summary));
+      els.trainingSummary.innerHTML = "";
+      if (!visible || !summary) return;
+      const title = document.createElement("strong");
+      title.textContent = "本次小結";
+      const body = document.createElement("span");
+      body.textContent = summary;
+      els.trainingSummary.append(title, body);
+    }
+
+    function renderTrainingHistory() {
+      els.trainingHistory.innerHTML = "";
+      if (!trainingSessions.length) {
+        const empty = document.createElement("div");
+        empty.className = "session-row";
+        const label = document.createElement("span");
+        label.textContent = "尚無訓練 session";
+        const value = document.createElement("strong");
+        value.textContent = "0";
+        empty.append(label, value);
+        els.trainingHistory.appendChild(empty);
+        return;
+      }
+
+      trainingSessions.slice(0, trainingHistoryDisplayLimit).forEach((session) => {
+        const row = document.createElement("div");
+        row.className = "session-row";
+        const date = new Date(session.completedAt || session.startedAt);
+        const label = document.createElement("span");
+        const dateLabel = Number.isNaN(date.getTime())
+          ? "最近"
+          : date.toLocaleDateString("zh-Hant", { month: "2-digit", day: "2-digit" });
+        label.textContent = `${dateLabel} · ${session.goalTitle}`;
+        const value = document.createElement("strong");
+        value.textContent = session.finalOverall || session.baselineOverall || "--";
+        row.append(label, value);
+        els.trainingHistory.appendChild(row);
       });
     }
 
@@ -2966,6 +3655,7 @@
         showToast("先寫下一個改寫版本，再讓 AI 教練評估。");
         return;
       }
+      recordTrainingRewrite(text);
 
       const lesson = lessons[currentIndex];
       const provider = els.providerSelect.value;
@@ -3004,6 +3694,7 @@
         const result = normalizeCoachResult(raw, lesson, text);
         renderCoachResult(result, lesson, text, "AI 教練");
         addCoachHistoryRecord(result, lesson, text, config.label);
+        recordTrainingCoach(result, config.label, true);
         setCoachStatus("AI 教練評估完成，已保存到教練紀錄。", "success");
       } catch (error) {
         setCoachStatus(formatCoachError(error, provider, endpoint), "error");
@@ -3021,9 +3712,11 @@
       }
 
       const lesson = lessons[currentIndex];
+      recordTrainingRewrite(text);
       const result = buildLocalCoachResult(lesson, text);
       renderCoachResult(result, lesson, text, "本地快速");
       addCoachHistoryRecord(result, lesson, text, "本地快速評分");
+      recordTrainingCoach(result, "本地快速評分", false);
       setCoachStatus("已完成本地快速評分。若要更細的診斷，可使用 AI 教練評估。", "success");
     }
 
@@ -4299,6 +4992,9 @@
     els.importLessonsInput.addEventListener("change", importGeneratedLessonsFromFile);
     els.shareBtn.addEventListener("click", shareProject);
     els.copyShareBtn.addEventListener("click", copyShareLink);
+    els.startTrainingBtn.addEventListener("click", () => startTodayTraining(false));
+    els.focusTrainingBtn.addEventListener("click", focusTrainingStep);
+    els.resetTrainingBtn.addEventListener("click", resetTodayTraining);
     els.targetWeaknessBtn.addEventListener("click", generateWeaknessLessons);
     els.providerSelect.addEventListener("change", () => updateProviderFields(true));
     els.modelInput.addEventListener("input", saveAiSettings);
