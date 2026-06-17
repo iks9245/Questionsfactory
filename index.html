@@ -34,6 +34,8 @@
     }
 
     button,
+    input,
+    select,
     textarea {
       font: inherit;
     }
@@ -382,6 +384,18 @@
       border-color: #f0d292;
     }
 
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .top-share-btn {
+      min-height: 38px;
+      white-space: nowrap;
+    }
+
     .btn:disabled {
       opacity: 0.55;
       cursor: not-allowed;
@@ -526,6 +540,82 @@
       padding-left: 18px;
       color: var(--muted);
       line-height: 1.55;
+    }
+
+    .library {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .library-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .library-list {
+      min-height: 244px;
+      line-height: 1.5;
+    }
+
+    .library-status,
+    .share-url {
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #f8fbfd;
+      color: var(--muted);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .library-editor {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .choice-editor-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice-editor {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice-editor-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 96px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .choice-editor-title {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .share-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .share-actions .btn {
+      width: 100%;
     }
 
     .custom-endpoint.hidden {
@@ -817,6 +907,8 @@
 
       .feedback-grid,
       .generator-grid,
+      .library-grid,
+      .choice-editor-head,
       .quality-summary,
       .intro-points,
       .sidebar {
@@ -837,6 +929,7 @@
           </div>
         </div>
         <div class="top-actions" aria-label="目前訓練進度">
+          <button class="btn secondary top-share-btn" id="shareBtn" type="button">分享</button>
           <div class="metric-pill">
             <span>完成回合</span>
             <strong id="roundsDone">0</strong>
@@ -943,6 +1036,54 @@
           <div class="quality-report" id="qualityReport" aria-live="polite"></div>
         </section>
 
+        <section class="panel library" aria-labelledby="libraryTitle">
+          <div class="section-head" style="padding:0">
+            <div>
+              <p class="eyebrow">題庫管理</p>
+              <h3 id="libraryTitle">保存、編輯與搬運 AI 題庫</h3>
+              <p>LLM 生成題庫會自動保存在這台瀏覽器。你可以刪題、改題、改分數，也可以匯出 JSON 分享或備份後再匯入。</p>
+            </div>
+          </div>
+
+          <div class="action-row" style="padding:0">
+            <button class="btn secondary" id="exportLessonsBtn" type="button">匯出 JSON</button>
+            <button class="btn secondary" id="importLessonsBtn" type="button">匯入 JSON</button>
+            <input class="file-input" id="importLessonsInput" type="file" accept="application/json,.json">
+          </div>
+
+          <div class="library-grid">
+            <div class="field">
+              <label for="lessonManagerSelect">已保存 AI 題庫</label>
+              <select class="library-list" id="lessonManagerSelect" size="8"></select>
+              <div class="library-status" id="libraryStatus">目前沒有 AI 題庫。先生成或匯入題庫。</div>
+            </div>
+
+            <div class="library-editor" id="libraryEditor">
+              <div class="field">
+                <label for="managerTitleInput">題目標題</label>
+                <input id="managerTitleInput" type="text" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="managerScenarioInput">場景</label>
+                <textarea id="managerScenarioInput"></textarea>
+              </div>
+              <div class="field">
+                <label for="managerWeakInput">待改寫弱問題</label>
+                <textarea id="managerWeakInput"></textarea>
+              </div>
+              <div class="choice-editor-list" id="choiceEditorList"></div>
+              <div class="field">
+                <label for="managerExplanationInput">解析</label>
+                <textarea id="managerExplanationInput"></textarea>
+              </div>
+              <div class="action-row" style="padding:0">
+                <button class="btn primary" id="saveManagedLessonBtn" type="button">儲存編輯</button>
+                <button class="btn warn" id="deleteManagedLessonBtn" type="button">刪除這題</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="panel scenario" aria-labelledby="scenarioTitle">
           <div>
             <p class="eyebrow">辨識訓練</p>
@@ -1018,6 +1159,19 @@
           <h3>最近紀錄</h3>
           <div class="history" id="history"></div>
         </section>
+
+        <section class="panel side-panel">
+          <h3>分享與部署</h3>
+          <div class="share-url">
+            <strong>GitHub Pages</strong>
+            <span id="shareUrlText"></span>
+          </div>
+          <div class="share-actions">
+            <button class="btn primary" id="copyShareBtn" type="button">複製分享連結</button>
+            <a class="btn secondary" id="openShareLink" href="https://iks9245.github.io/Questionsfactory/" target="_blank" rel="noopener">開啟公開頁</a>
+          </div>
+        </section>
+
       </aside>
     </main>
   </div>
@@ -1036,6 +1190,7 @@
 
     const generatedLessonsKey = "question-gym-generated-lessons";
     const aiSettingsKey = "question-gym-ai-settings";
+    const publicShareUrl = "https://iks9245.github.io/Questionsfactory/";
     const qualityEngine = {
       minLessons: 10,
       maxAttempts: 3,
@@ -1433,6 +1588,7 @@
     let checked = false;
     let stats = loadStats();
     let aiSettings = loadAiSettings();
+    let selectedLibraryIndex = 0;
 
     const els = {
       roundsDone: document.getElementById("roundsDone"),
@@ -1473,6 +1629,22 @@
       clearGeneratedBtn: document.getElementById("clearGeneratedBtn"),
       aiStatus: document.getElementById("aiStatus"),
       qualityReport: document.getElementById("qualityReport"),
+      lessonManagerSelect: document.getElementById("lessonManagerSelect"),
+      libraryStatus: document.getElementById("libraryStatus"),
+      managerTitleInput: document.getElementById("managerTitleInput"),
+      managerScenarioInput: document.getElementById("managerScenarioInput"),
+      managerWeakInput: document.getElementById("managerWeakInput"),
+      choiceEditorList: document.getElementById("choiceEditorList"),
+      managerExplanationInput: document.getElementById("managerExplanationInput"),
+      saveManagedLessonBtn: document.getElementById("saveManagedLessonBtn"),
+      deleteManagedLessonBtn: document.getElementById("deleteManagedLessonBtn"),
+      exportLessonsBtn: document.getElementById("exportLessonsBtn"),
+      importLessonsBtn: document.getElementById("importLessonsBtn"),
+      importLessonsInput: document.getElementById("importLessonsInput"),
+      shareBtn: document.getElementById("shareBtn"),
+      copyShareBtn: document.getElementById("copyShareBtn"),
+      openShareLink: document.getElementById("openShareLink"),
+      shareUrlText: document.getElementById("shareUrlText"),
       toast: document.getElementById("toast")
     };
 
@@ -1502,22 +1674,333 @@
       try {
         const saved = JSON.parse(localStorage.getItem(generatedLessonsKey));
         if (!Array.isArray(saved)) return [];
-        return saved.map(validateLesson).filter(Boolean);
+        return saved.map(sanitizeStoredLesson).filter(Boolean);
       } catch {
         return [];
       }
     }
 
     function saveGeneratedLessons() {
-      const generated = lessons.slice(baseLessonCount).map((lesson) => ({
+      const generated = lessons.slice(baseLessonCount).map(serializeLesson);
+      localStorage.setItem(generatedLessonsKey, JSON.stringify(generated));
+    }
+
+    function serializeLesson(lesson) {
+      return {
         title: lesson.title,
         scenario: lesson.scenario,
         weak: lesson.weak,
-        choices: lesson.choices,
+        choices: lesson.choices.map((choice) => ({
+          text: choice.text,
+          score: clampInt(choice.score, 0, 100),
+          dims: sanitizeDims(choice.dims),
+          note: choice.note
+        })),
         explanation: lesson.explanation,
+        source: lesson.source || "題庫管理",
+        difficulty: lesson.difficulty || "managed",
+        quality: lesson.quality || null,
         generated: true
-      }));
-      localStorage.setItem(generatedLessonsKey, JSON.stringify(generated));
+      };
+    }
+
+    function sanitizeStoredLesson(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      const source = raw.lesson && typeof raw.lesson === "object" ? raw.lesson : raw;
+      const choices = Array.isArray(source.choices)
+        ? source.choices.slice(0, 4).map(validateChoice).filter(Boolean)
+        : [];
+      if (!asText(source.title) || !asText(source.scenario) || !asText(source.weak) || !asText(source.explanation)) return null;
+      if (choices.length !== 4) return null;
+
+      return {
+        title: asText(source.title),
+        scenario: asText(source.scenario),
+        weak: asText(source.weak),
+        choices,
+        explanation: asText(source.explanation),
+        source: asText(source.source) || "題庫管理",
+        difficulty: asText(source.difficulty) || "managed",
+        quality: source.quality && typeof source.quality === "object" ? source.quality : null,
+        generated: true
+      };
+    }
+
+    function sanitizeDims(dims) {
+      const safe = {};
+      dimensions.forEach((dimension) => {
+        safe[dimension.key] = clampInt(dims?.[dimension.key], 0, 5);
+      });
+      return safe;
+    }
+
+    function getGeneratedLessons() {
+      return lessons.slice(baseLessonCount);
+    }
+
+    function renderLibraryManager() {
+      const generated = getGeneratedLessons();
+      els.lessonManagerSelect.innerHTML = "";
+
+      generated.forEach((lesson, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = `${index + 1}. ${lesson.title}`;
+        els.lessonManagerSelect.appendChild(option);
+      });
+
+      if (!generated.length) {
+        selectedLibraryIndex = 0;
+        els.libraryStatus.textContent = "目前沒有 AI 題庫。先生成或匯入題庫。";
+        populateLibraryForm(null);
+        setLibraryFormEnabled(false);
+        return;
+      }
+
+      selectedLibraryIndex = clampInt(selectedLibraryIndex, 0, generated.length - 1);
+      els.lessonManagerSelect.value = String(selectedLibraryIndex);
+      els.libraryStatus.textContent = `已保存 ${generated.length} 題 AI 題庫。編輯後請按「儲存編輯」。`;
+      populateLibraryForm(generated[selectedLibraryIndex]);
+      setLibraryFormEnabled(true);
+    }
+
+    function populateLibraryForm(lesson) {
+      els.managerTitleInput.value = lesson?.title || "";
+      els.managerScenarioInput.value = lesson?.scenario || "";
+      els.managerWeakInput.value = lesson?.weak || "";
+      els.managerExplanationInput.value = lesson?.explanation || "";
+      els.choiceEditorList.innerHTML = "";
+
+      const choices = lesson?.choices || [];
+      for (let index = 0; index < 4; index += 1) {
+        const choice = choices[index] || { text: "", score: 0, note: "", dims: {} };
+        const row = document.createElement("div");
+        row.className = "choice-editor";
+        row.dataset.choiceIndex = String(index);
+        row.innerHTML = `
+          <div class="choice-editor-head">
+            <div class="choice-editor-title">選項 ${String.fromCharCode(65 + index)}</div>
+            <div class="field">
+              <label>分數</label>
+              <input data-choice-score type="number" min="0" max="100" step="1">
+            </div>
+          </div>
+          <div class="field">
+            <label>問題文字</label>
+            <textarea data-choice-text></textarea>
+          </div>
+          <div class="field">
+            <label>評分理由</label>
+            <textarea data-choice-note></textarea>
+          </div>
+        `;
+        row.querySelector("[data-choice-text]").value = choice.text || "";
+        row.querySelector("[data-choice-score]").value = clampInt(choice.score, 0, 100);
+        row.querySelector("[data-choice-note]").value = choice.note || "";
+        els.choiceEditorList.appendChild(row);
+      }
+    }
+
+    function setLibraryFormEnabled(enabled) {
+      [
+        els.lessonManagerSelect,
+        els.managerTitleInput,
+        els.managerScenarioInput,
+        els.managerWeakInput,
+        els.managerExplanationInput,
+        els.saveManagedLessonBtn,
+        els.deleteManagedLessonBtn
+      ].forEach((element) => {
+        element.disabled = !enabled;
+      });
+      els.choiceEditorList.querySelectorAll("input, textarea").forEach((element) => {
+        element.disabled = !enabled;
+      });
+    }
+
+    function readManagedLessonFromForm() {
+      const original = getGeneratedLessons()[selectedLibraryIndex];
+      const choices = [...els.choiceEditorList.querySelectorAll(".choice-editor")].map((row, index) => {
+        const score = clampInt(row.querySelector("[data-choice-score]").value, 0, 100);
+        return {
+          text: asText(row.querySelector("[data-choice-text]").value),
+          score,
+          dims: sanitizeDims(original?.choices?.[index]?.dims || defaultDimsForScore(score)),
+          note: asText(row.querySelector("[data-choice-note]").value)
+        };
+      });
+
+      const lesson = {
+        title: asText(els.managerTitleInput.value),
+        scenario: asText(els.managerScenarioInput.value),
+        weak: asText(els.managerWeakInput.value),
+        choices,
+        explanation: asText(els.managerExplanationInput.value),
+        source: original?.source || "題庫管理",
+        difficulty: "managed",
+        quality: original?.quality || null,
+        generated: true
+      };
+
+      if (!lesson.title || !lesson.scenario || !lesson.weak || !lesson.explanation) {
+        throw new Error("請填完整題目標題、場景、弱問題與解析。");
+      }
+      if (choices.length !== 4 || choices.some((choice) => !choice.text || !choice.note)) {
+        throw new Error("四個選項都需要問題文字與評分理由。");
+      }
+      return lesson;
+    }
+
+    function defaultDimsForScore(score) {
+      const value = score >= 88 ? 5 : score >= 80 ? 4 : score >= 70 ? 3 : 2;
+      return Object.fromEntries(dimensions.map((dimension) => [dimension.key, value]));
+    }
+
+    function saveSelectedManagedLesson() {
+      if (!getGeneratedLessons().length) return;
+      try {
+        const lesson = readManagedLessonFromForm();
+        const absoluteIndex = baseLessonCount + selectedLibraryIndex;
+        lessons[absoluteIndex] = lesson;
+        saveGeneratedLessons();
+        renderLibraryManager();
+        if (currentIndex === absoluteIndex) render();
+        showToast("題目已儲存。");
+      } catch (error) {
+        showToast(error.message || "題目未儲存，請檢查欄位。");
+      }
+    }
+
+    function deleteSelectedManagedLesson() {
+      const generated = getGeneratedLessons();
+      if (!generated.length) return;
+      const absoluteIndex = baseLessonCount + selectedLibraryIndex;
+      lessons.splice(absoluteIndex, 1);
+      if (currentIndex > absoluteIndex) currentIndex -= 1;
+      if (currentIndex >= lessons.length) currentIndex = 0;
+      selectedLibraryIndex = Math.min(selectedLibraryIndex, Math.max(0, getGeneratedLessons().length - 1));
+      saveGeneratedLessons();
+      renderLibraryManager();
+      render();
+      showToast("題目已刪除。");
+    }
+
+    function exportGeneratedLessons() {
+      const generated = getGeneratedLessons().map(serializeLesson);
+      if (!generated.length) {
+        showToast("目前沒有可匯出的 AI 題庫。");
+        return;
+      }
+
+      const payload = {
+        app: "Questionsfactory",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        lessons: generated
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `questionsfactory-lessons-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast(`已匯出 ${generated.length} 題 JSON。`);
+    }
+
+    function triggerImportLessons() {
+      els.importLessonsInput.click();
+    }
+
+    async function importGeneratedLessonsFromFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const parsed = JSON.parse(await file.text());
+        const imported = extractImportCandidates(parsed).map(sanitizeStoredLesson).filter(Boolean);
+        if (!imported.length) {
+          showToast("沒有找到可匯入的有效題目。");
+          return;
+        }
+
+        const existing = new Set(getGeneratedLessons().map(getLessonFingerprint));
+        const fresh = imported.filter((lesson) => {
+          const key = getLessonFingerprint(lesson);
+          if (existing.has(key)) return false;
+          existing.add(key);
+          return true;
+        });
+
+        if (!fresh.length) {
+          showToast("匯入檔案中的題目已存在。");
+          return;
+        }
+
+        lessons.push(...fresh);
+        selectedLibraryIndex = getGeneratedLessons().length - fresh.length;
+        saveGeneratedLessons();
+        renderLibraryManager();
+        render();
+        showToast(`已匯入 ${fresh.length} 題。`);
+      } catch {
+        showToast("匯入失敗，請確認 JSON 格式正確。");
+      } finally {
+        event.target.value = "";
+      }
+    }
+
+    function extractImportCandidates(raw) {
+      if (Array.isArray(raw)) return raw;
+      if (Array.isArray(raw?.lessons)) return raw.lessons;
+      if (Array.isArray(raw?.items)) return raw.items;
+      if (Array.isArray(raw?.questions)) return raw.questions;
+      if (Array.isArray(raw?.data)) return raw.data;
+      return raw?.lesson ? [raw.lesson] : [];
+    }
+
+    function initShareUi() {
+      const url = getShareUrl();
+      els.shareUrlText.textContent = url;
+      els.openShareLink.href = url;
+    }
+
+    function getShareUrl() {
+      const host = location.hostname;
+      const isLocal = !host || host === "localhost" || host === "127.0.0.1" || location.protocol === "file:";
+      return isLocal ? publicShareUrl : location.href;
+    }
+
+    async function shareProject() {
+      const url = getShareUrl();
+      if (navigator.share && /^https?:/i.test(url)) {
+        try {
+          await navigator.share({
+            title: "Questionsfactory",
+            text: "用 Questionsfactory 練習判斷與升級好問題。",
+            url
+          });
+          return;
+        } catch (error) {
+          if (/abort/i.test(error?.name || "")) return;
+        }
+      }
+      await copyTextToClipboard(url, "已複製分享連結。");
+    }
+
+    async function copyShareLink() {
+      await copyTextToClipboard(getShareUrl(), "已複製分享連結。");
+    }
+
+    async function copyTextToClipboard(text, successMessage) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(successMessage);
+      } catch {
+        showToast("瀏覽器不允許自動複製，請手動複製連結。");
+      }
     }
 
     function loadAiSettings() {
@@ -2007,6 +2490,7 @@
         const startIndex = lessons.length;
         lessons.push(...generatedBatch);
         saveGeneratedLessons();
+        renderLibraryManager();
         currentIndex = startIndex;
         render();
         renderQualityReport(result.report);
@@ -2773,7 +3257,9 @@
     function clearGeneratedLessons() {
       lessons.splice(baseLessonCount);
       localStorage.removeItem(generatedLessonsKey);
+      selectedLibraryIndex = 0;
       if (currentIndex >= lessons.length) currentIndex = 0;
+      renderLibraryManager();
       render();
       setAiStatus("AI 生成題目已清除，固定題庫仍保留。", "success");
     }
@@ -2799,6 +3285,17 @@
     els.resetBtn.addEventListener("click", resetStats);
     els.scoreRewriteBtn.addEventListener("click", scoreRewrite);
     els.copyBtn.addEventListener("click", copyQuestion);
+    els.lessonManagerSelect.addEventListener("change", () => {
+      selectedLibraryIndex = clampInt(els.lessonManagerSelect.value, 0, Math.max(0, getGeneratedLessons().length - 1));
+      renderLibraryManager();
+    });
+    els.saveManagedLessonBtn.addEventListener("click", saveSelectedManagedLesson);
+    els.deleteManagedLessonBtn.addEventListener("click", deleteSelectedManagedLesson);
+    els.exportLessonsBtn.addEventListener("click", exportGeneratedLessons);
+    els.importLessonsBtn.addEventListener("click", triggerImportLessons);
+    els.importLessonsInput.addEventListener("change", importGeneratedLessonsFromFile);
+    els.shareBtn.addEventListener("click", shareProject);
+    els.copyShareBtn.addEventListener("click", copyShareLink);
     els.providerSelect.addEventListener("change", () => updateProviderFields(true));
     els.modelInput.addEventListener("input", saveAiSettings);
     els.lessonCountInput.addEventListener("input", saveAiSettings);
@@ -2810,6 +3307,8 @@
     els.clearGeneratedBtn.addEventListener("click", clearGeneratedLessons);
 
     initGeneratorSettings();
+    initShareUi();
+    renderLibraryManager();
     render();
   </script>
 </body>
