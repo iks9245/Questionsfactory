@@ -749,6 +749,96 @@
       font-size: 14px;
     }
 
+    .coach-summary {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .coach-dimensions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .coach-dimension {
+      border: 1px solid #c9dfdc;
+      border-radius: 8px;
+      background: white;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .coach-dimension-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .coach-dimension-head span:last-child {
+      color: var(--teal-dark);
+    }
+
+    .coach-dimension p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .coach-section {
+      margin-top: 14px;
+    }
+
+    .coach-section h4 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .comparison-card {
+      border: 1px solid #c9dfdc;
+      border-radius: 8px;
+      background: white;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .comparison-card span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--teal-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .comparison-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .coach-history-note {
+      margin: -4px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
     .sidebar {
       position: sticky;
       top: 92px;
@@ -826,6 +916,11 @@
 
     .history-row strong {
       color: var(--ink);
+    }
+
+    .history-row span {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .toast {
@@ -910,6 +1005,8 @@
       .library-grid,
       .choice-editor-head,
       .quality-summary,
+      .coach-dimensions,
+      .comparison-grid,
       .intro-points,
       .sidebar {
         grid-template-columns: 1fr;
@@ -925,7 +1022,7 @@
           <div class="mark" aria-hidden="true">Q</div>
           <div>
             <h1>Questionsfactory</h1>
-            <p>問題力訓練場：先判斷品質，再升級提問。</p>
+            <p>問題力訓練場：先判斷品質，再用 AI 教練升級提問。</p>
           </div>
         </div>
         <div class="top-actions" aria-label="目前訓練進度">
@@ -954,7 +1051,7 @@
             <h2 id="projectIntroTitle">用問題驅動思考，而不是只追逐答案</h2>
           </div>
           <p>
-            Questionsfactory 是一個單頁訓練工具，目標是幫使用者建立「判斷問題品質」的能力。它透過辨識、解析與改寫三個動作，訓練使用者看見目的、情境、邊界、深度、行動與假設。
+            Questionsfactory 是一個單頁訓練工具，目標是幫使用者建立「判斷問題品質」的能力。它透過辨識、解析、改寫與 AI 教練回饋，訓練使用者看見目的、情境、邊界、深度、行動與假設。
           </p>
           <div class="intro-points" aria-label="項目核心能力">
             <div class="intro-point">
@@ -966,8 +1063,8 @@
               <span>把空泛、封閉或失焦的問題改寫成可行動的問題。</span>
             </div>
             <div class="intro-point">
-              <strong>接入 LLM 題庫</strong>
-              <span>支援雲端與本機模型，產生新的高干擾訓練題。</span>
+              <strong>AI 問題教練</strong>
+              <span>支援雲端與本機模型，評改你的問題並提出追問。</span>
             </div>
           </div>
         </section>
@@ -1134,12 +1231,37 @@
           </div>
           <textarea id="rewriteInput" placeholder="把它改寫成更具體、更有情境、更能導向判斷或行動的問題。"></textarea>
           <div class="action-row" style="padding:0">
-            <button class="btn primary" id="scoreRewriteBtn" type="button">評估改寫</button>
+            <button class="btn primary" id="scoreRewriteBtn" type="button">AI 教練評估</button>
+            <button class="btn secondary" id="localScoreRewriteBtn" type="button">本地快速評分</button>
             <button class="btn secondary" id="copyBtn" type="button">複製我的問題</button>
           </div>
+          <div class="ai-status" id="coachStatus" role="status" aria-live="polite"></div>
           <div class="rewrite-result" id="rewriteResult">
             <h4 id="rewriteScoreTitle"></h4>
+            <p class="coach-summary" id="coachSummary"></p>
             <ul id="rewriteTips"></ul>
+            <div class="coach-dimensions" id="coachDimensions"></div>
+            <div class="coach-section">
+              <h4>教練追問</h4>
+              <ul id="coachFollowUps"></ul>
+            </div>
+            <div class="coach-section">
+              <h4>三版本比較</h4>
+              <div class="comparison-grid">
+                <div class="comparison-card">
+                  <span>原弱問題</span>
+                  <p id="compareWeak"></p>
+                </div>
+                <div class="comparison-card">
+                  <span>我的改寫</span>
+                  <p id="compareUser"></p>
+                </div>
+                <div class="comparison-card">
+                  <span>AI 示範改寫</span>
+                  <p id="compareModel"></p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div>
@@ -1158,6 +1280,12 @@
         <section class="panel side-panel">
           <h3>最近紀錄</h3>
           <div class="history" id="history"></div>
+        </section>
+
+        <section class="panel side-panel">
+          <h3>教練紀錄</h3>
+          <p class="coach-history-note">保存每次改寫評估，方便回看自己的提問能力變化。</p>
+          <div class="history" id="coachHistory"></div>
         </section>
 
         <section class="panel side-panel">
@@ -1190,6 +1318,7 @@
 
     const generatedLessonsKey = "question-gym-generated-lessons";
     const aiSettingsKey = "question-gym-ai-settings";
+    const coachHistoryKey = "question-gym-coach-history";
     const publicShareUrl = "https://iks9245.github.io/Questionsfactory/";
     const qualityEngine = {
       minLessons: 10,
@@ -1286,6 +1415,76 @@
       }
     };
 
+    const coachDimensionResultSchema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["score", "diagnosis", "suggestion"],
+      properties: {
+        score: {
+          type: "integer",
+          description: "0 to 5 score for this question quality dimension."
+        },
+        diagnosis: {
+          type: "string",
+          description: "Concrete diagnosis in Traditional Chinese."
+        },
+        suggestion: {
+          type: "string",
+          description: "Concrete improvement suggestion in Traditional Chinese."
+        }
+      }
+    };
+
+    const coachResultSchema = {
+      type: "object",
+      additionalProperties: false,
+      required: ["overallScore", "summary", "dimensions", "followUps", "modelRewrite", "comparison"],
+      properties: {
+        overallScore: {
+          type: "integer",
+          description: "Overall score from 0 to 100."
+        },
+        summary: {
+          type: "string",
+          description: "A concise overall diagnosis in Traditional Chinese."
+        },
+        dimensions: {
+          type: "object",
+          additionalProperties: false,
+          required: ["purpose", "context", "boundary", "depth", "action", "assumption"],
+          properties: {
+            purpose: coachDimensionResultSchema,
+            context: coachDimensionResultSchema,
+            boundary: coachDimensionResultSchema,
+            depth: coachDimensionResultSchema,
+            action: coachDimensionResultSchema,
+            assumption: coachDimensionResultSchema
+          }
+        },
+        followUps: {
+          type: "array",
+          minItems: 1,
+          maxItems: 3,
+          items: { type: "string" },
+          description: "One to three follow-up questions that help the learner complete missing context."
+        },
+        modelRewrite: {
+          type: "string",
+          description: "A stronger rewritten question in Traditional Chinese."
+        },
+        comparison: {
+          type: "object",
+          additionalProperties: false,
+          required: ["originalWeak", "userRewrite", "modelRewrite"],
+          properties: {
+            originalWeak: { type: "string" },
+            userRewrite: { type: "string" },
+            modelRewrite: { type: "string" }
+          }
+        }
+      }
+    };
+
     const providerConfigs = {
       openai: {
         label: "OpenAI Responses",
@@ -1373,6 +1572,18 @@
       "每個 choice 的 note 要清楚說明該選項的優點與細微缺陷，不能只寫空泛評語。",
       "每題 explanation 要指出最佳選項為什麼勝出，並說明它比第二名多了哪一個關鍵結構。",
       "dims 的六個維度都必須是 0 到 5 的整數。不要輸出多餘文字。"
+    ].join("\n");
+
+    const coachSystemPrompt = [
+      "你是一位繁體中文 AI 問題教練，專門訓練使用者把弱問題改寫成能推動思考與行動的好問題。",
+      "請嚴格根據使用者提交的改寫版本評分，不要只因為句子較長就給高分。",
+      "你必須從六個維度診斷：目的、情境、邊界、深度、行動、假設。",
+      "每個維度都要給 0 到 5 的整數分數、具體診斷，以及可操作的改進建議。",
+      "整體分數是 0 到 100 的整數，要反映問題是否能導向更清楚的答案、判斷或下一步。",
+      "請提出 1 到 3 個追問，幫使用者補足目前問題缺失的關鍵資訊。",
+      "請提供一個示範改寫版本，不能只是堆疊條件，必須更清楚、更聚焦、更能暴露假設。",
+      "請比較原弱問題、使用者改寫、AI 示範改寫三者的差異。",
+      "只輸出合法 JSON，不要 Markdown，不要程式碼區塊，不要多餘說明。"
     ].join("\n");
 
     const lessons = [
@@ -1588,6 +1799,7 @@
     let checked = false;
     let stats = loadStats();
     let aiSettings = loadAiSettings();
+    let coachHistory = loadCoachHistory();
     let selectedLibraryIndex = 0;
 
     const els = {
@@ -1609,13 +1821,22 @@
       weakQuestion: document.getElementById("weakQuestion"),
       rewriteInput: document.getElementById("rewriteInput"),
       scoreRewriteBtn: document.getElementById("scoreRewriteBtn"),
+      localScoreRewriteBtn: document.getElementById("localScoreRewriteBtn"),
       copyBtn: document.getElementById("copyBtn"),
+      coachStatus: document.getElementById("coachStatus"),
       rewriteResult: document.getElementById("rewriteResult"),
       rewriteScoreTitle: document.getElementById("rewriteScoreTitle"),
+      coachSummary: document.getElementById("coachSummary"),
       rewriteTips: document.getElementById("rewriteTips"),
+      coachDimensions: document.getElementById("coachDimensions"),
+      coachFollowUps: document.getElementById("coachFollowUps"),
+      compareWeak: document.getElementById("compareWeak"),
+      compareUser: document.getElementById("compareUser"),
+      compareModel: document.getElementById("compareModel"),
       mastery: document.getElementById("mastery"),
       diagnosis: document.getElementById("diagnosis"),
       history: document.getElementById("history"),
+      coachHistory: document.getElementById("coachHistory"),
       providerSelect: document.getElementById("providerSelect"),
       modelInput: document.getElementById("modelInput"),
       lessonCountInput: document.getElementById("lessonCountInput"),
@@ -1668,6 +1889,67 @@
 
     function saveStats() {
       localStorage.setItem(stateKey, JSON.stringify(stats));
+    }
+
+    function loadCoachHistory() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(coachHistoryKey));
+        if (!Array.isArray(saved)) return [];
+        return saved.map(sanitizeCoachHistoryItem).filter(Boolean).slice(0, 12);
+      } catch {
+        return [];
+      }
+    }
+
+    function saveCoachHistory() {
+      localStorage.setItem(coachHistoryKey, JSON.stringify(coachHistory.slice(0, 12)));
+    }
+
+    function sanitizeCoachHistoryItem(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      return {
+        at: asText(raw.at) || new Date().toISOString(),
+        title: asText(raw.title) || "未命名題目",
+        weak: asText(raw.weak),
+        userRewrite: asText(raw.userRewrite),
+        modelRewrite: asText(raw.modelRewrite),
+        overallScore: clampInt(raw.overallScore, 0, 100),
+        summary: asText(raw.summary),
+        source: asText(raw.source) || "AI 教練",
+        dimensions: sanitizeCoachDimensions(raw.dimensions),
+        followUps: Array.isArray(raw.followUps) ? raw.followUps.map(asText).filter(Boolean).slice(0, 3) : []
+      };
+    }
+
+    function sanitizeCoachDimensions(raw = {}) {
+      const output = {};
+      dimensions.forEach((dimension) => {
+        const item = raw?.[dimension.key] || {};
+        output[dimension.key] = {
+          score: clampInt(item.score, 0, 5),
+          diagnosis: asText(item.diagnosis),
+          suggestion: asText(item.suggestion)
+        };
+      });
+      return output;
+    }
+
+    function addCoachHistoryRecord(result, lesson, userRewrite, source) {
+      coachHistory.unshift({
+        at: new Date().toISOString(),
+        title: lesson.title,
+        weak: lesson.weak,
+        userRewrite,
+        modelRewrite: result.modelRewrite,
+        overallScore: result.overallScore,
+        summary: result.summary,
+        source,
+        dimensions: result.dimensions,
+        followUps: result.followUps
+      });
+      coachHistory = coachHistory.slice(0, 12);
+      saveCoachHistory();
+      renderCoachHistory();
     }
 
     function loadGeneratedLessons() {
@@ -2074,6 +2356,16 @@
       els.aiStatus.className = `ai-status visible${type ? ` ${type}` : ""}`;
     }
 
+    function setCoachStatus(message, type = "") {
+      if (!message) {
+        els.coachStatus.textContent = "";
+        els.coachStatus.className = "ai-status";
+        return;
+      }
+      els.coachStatus.textContent = message;
+      els.coachStatus.className = `ai-status visible${type ? ` ${type}` : ""}`;
+    }
+
     function createQualityReport(targetCount) {
       return {
         targetCount,
@@ -2203,6 +2495,7 @@
       els.weakQuestion.textContent = lesson.weak;
       els.rewriteInput.value = "";
       els.rewriteResult.classList.remove("visible");
+      setCoachStatus("");
       els.feedback.classList.remove("visible");
       els.checkBtn.disabled = true;
       els.nextBtn.disabled = true;
@@ -2378,55 +2671,268 @@
       });
     }
 
-    function scoreRewrite() {
+    function renderCoachHistory() {
+      els.coachHistory.innerHTML = "";
+      if (!coachHistory.length) {
+        els.coachHistory.innerHTML = `<div class="history-row"><span>尚無紀錄</span><strong>0</strong></div>`;
+        return;
+      }
+
+      coachHistory.slice(0, 6).forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "history-row";
+        const date = new Date(item.at);
+        const label = Number.isNaN(date.getTime())
+          ? "最近"
+          : date.toLocaleDateString("zh-Hant", { month: "2-digit", day: "2-digit" });
+        const title = document.createElement("span");
+        title.textContent = `${label} · ${item.title}`;
+        const score = document.createElement("strong");
+        score.textContent = item.overallScore;
+        row.append(title, score);
+        els.coachHistory.appendChild(row);
+      });
+    }
+
+    function renderCoachResult(result, lesson, userRewrite, sourceLabel = "AI 教練") {
+      els.rewriteScoreTitle.textContent = `${sourceLabel}評分：${result.overallScore} 分`;
+      els.coachSummary.textContent = result.summary;
+
+      const priorityTips = dimensions
+        .map((dimension) => ({
+          ...dimension,
+          item: result.dimensions[dimension.key]
+        }))
+        .sort((a, b) => a.item.score - b.item.score)
+        .slice(0, 3);
+
+      els.rewriteTips.innerHTML = "";
+      priorityTips.forEach((dimension) => {
+        const li = document.createElement("li");
+        li.textContent = `優先補強「${dimension.label}」：${dimension.item.suggestion}`;
+        els.rewriteTips.appendChild(li);
+      });
+
+      els.coachDimensions.innerHTML = "";
+      dimensions.forEach((dimension) => {
+        const item = result.dimensions[dimension.key];
+        const card = document.createElement("div");
+        card.className = "coach-dimension";
+        card.innerHTML = `
+          <div class="coach-dimension-head">
+            <span>${dimension.label}</span>
+            <span>${item.score}/5</span>
+          </div>
+          <p></p>
+          <p></p>
+        `;
+        const paragraphs = card.querySelectorAll("p");
+        paragraphs[0].textContent = `診斷：${item.diagnosis}`;
+        paragraphs[1].textContent = `建議：${item.suggestion}`;
+        els.coachDimensions.appendChild(card);
+      });
+
+      els.coachFollowUps.innerHTML = "";
+      result.followUps.forEach((question) => {
+        const li = document.createElement("li");
+        li.textContent = question;
+        els.coachFollowUps.appendChild(li);
+      });
+
+      els.compareWeak.textContent = result.comparison.originalWeak || lesson.weak;
+      els.compareUser.textContent = result.comparison.userRewrite || userRewrite;
+      els.compareModel.textContent = result.comparison.modelRewrite || result.modelRewrite;
+      els.rewriteResult.classList.add("visible");
+    }
+
+    async function scoreRewrite() {
+      const text = els.rewriteInput.value.trim();
+      if (!text) {
+        showToast("先寫下一個改寫版本，再讓 AI 教練評估。");
+        return;
+      }
+
+      const lesson = lessons[currentIndex];
+      const provider = els.providerSelect.value;
+      const model = els.modelInput.value.trim();
+      const apiKey = els.apiKeyInput.value.trim();
+      const endpoint = els.endpointInput.value.trim();
+      const config = providerConfigs[provider];
+
+      if (config.requiresKey && !apiKey) {
+        setCoachStatus("請先在 AI 出題區填入 API key，AI 教練會共用同一組模型設定。", "error");
+        return;
+      }
+      if (!model) {
+        setCoachStatus("請先填入模型名稱。", "error");
+        return;
+      }
+      if (config.needsEndpoint && !endpoint) {
+        setCoachStatus("請先填入本機或自訂端點。", "error");
+        return;
+      }
+
+      saveAiSettings();
+      els.scoreRewriteBtn.disabled = true;
+      els.localScoreRewriteBtn.disabled = true;
+      setCoachStatus(`正在請 ${config.label} 評估你的改寫...`);
+
+      try {
+        const raw = await callCoachProvider({
+          provider,
+          model,
+          apiKey,
+          endpoint,
+          lesson,
+          userRewrite: text
+        });
+        const result = normalizeCoachResult(raw, lesson, text);
+        renderCoachResult(result, lesson, text, "AI 教練");
+        addCoachHistoryRecord(result, lesson, text, config.label);
+        setCoachStatus("AI 教練評估完成，已保存到教練紀錄。", "success");
+      } catch (error) {
+        setCoachStatus(formatCoachError(error, provider, endpoint), "error");
+      } finally {
+        els.scoreRewriteBtn.disabled = false;
+        els.localScoreRewriteBtn.disabled = false;
+      }
+    }
+
+    function scoreRewriteLocally() {
       const text = els.rewriteInput.value.trim();
       if (!text) {
         showToast("先寫下一個改寫版本，再讓系統評估。");
         return;
       }
 
-      const checks = [
-        {
-          label: "有明確目的",
-          passed: /想|希望|目標|為了|如何|怎麼|應該|能否/.test(text)
+      const lesson = lessons[currentIndex];
+      const result = buildLocalCoachResult(lesson, text);
+      renderCoachResult(result, lesson, text, "本地快速");
+      addCoachHistoryRecord(result, lesson, text, "本地快速評分");
+      setCoachStatus("已完成本地快速評分。若要更細的診斷，可使用 AI 教練評估。", "success");
+    }
+
+    function buildLocalCoachResult(lesson, userRewrite) {
+      const checks = {
+        purpose: {
+          passed: /想|希望|目標|為了|如何|怎麼|應該|能否|要不要|是否/.test(userRewrite),
+          diagnosis: "問題已嘗試表達想解決的方向，但目的是否能導向具體判斷仍要看輸出要求。",
+          missing: "目前還看不出你希望答案幫你完成哪個判斷或決策。",
+          suggestion: "補上一句「我想用答案來決定/比較/設計什麼」。"
         },
-        {
-          label: "有具體情境",
-          passed: /我|我們|公司|團隊|學生|使用者|每天|目前|已經|過去|如果/.test(text)
+        context: {
+          passed: /我|我們|公司|團隊|學生|使用者|客戶|每天|目前|已經|過去|如果|因為/.test(userRewrite),
+          diagnosis: "問題包含部分使用者或情境線索，回答者較容易貼近真實場景。",
+          missing: "情境資訊偏少，回答容易變成通用建議。",
+          suggestion: "補上對象、目前狀態、遇到的困難或已嘗試的方法。"
         },
-        {
-          label: "有邊界條件",
-          passed: /\d|年|月|週|天|分鐘|小時|階段|範圍|三個|五個|最/.test(text)
+        boundary: {
+          passed: /\d|年|月|週|天|分鐘|小時|階段|範圍|三個|五個|最|以內|之前|之間/.test(userRewrite),
+          diagnosis: "問題有一定範圍，能減少答案發散。",
+          missing: "問題缺少時間、對象、資源或比較範圍，答案可能過大。",
+          suggestion: "加上時間、預算、對象、選項數量或排除條件。"
         },
-        {
-          label: "能引發比較或取捨",
-          passed: /比較|取捨|風險|代價|反例|為什麼|哪些|哪一個|優先|最適合/.test(text)
+        depth: {
+          passed: /比較|取捨|風險|代價|反例|為什麼|哪些|哪一個|優先|最適合|假如|原因/.test(userRewrite),
+          diagnosis: "問題能推動分析，不只是要一份清單。",
+          missing: "問題目前偏向取得答案，還沒有逼出比較、取捨或原因。",
+          suggestion: "要求回答比較方案、說明代價、列出反例或指出關鍵判斷標準。"
         },
-        {
-          label: "能導向行動",
-          passed: /設計|評估|判斷|選擇|制定|改善|衡量|下一步|建議|指標/.test(text)
+        action: {
+          passed: /設計|評估|判斷|選擇|制定|改善|衡量|下一步|建議|指標|計畫|執行/.test(userRewrite),
+          diagnosis: "問題能連到後續行動，較容易產生可用輸出。",
+          missing: "問題和下一步行動的連結還不夠清楚。",
+          suggestion: "明確指定希望得到方案、指標、決策建議或下一步清單。"
+        },
+        assumption: {
+          passed: /假設|前提|是否其實|我以為|擔心|盲點|風險|限制|反例|錯在哪/.test(userRewrite),
+          diagnosis: "問題有機會暴露部分前提，能讓回答不只順著你的想法走。",
+          missing: "問題沒有把隱含前提攤開，回答者可能會默認你的假設成立。",
+          suggestion: "補上一句「我可能忽略了哪些前提、風險或反例」。"
         }
-      ];
+      };
 
-      const passedCount = checks.filter((item) => item.passed).length;
-      const lengthBonus = text.length >= 28 ? 1 : 0;
-      const score = Math.min(100, 38 + passedCount * 11 + lengthBonus * 7);
-
-      els.rewriteScoreTitle.textContent = `改寫評分：${score} 分`;
-      els.rewriteTips.innerHTML = "";
-      checks.forEach((item) => {
-        const li = document.createElement("li");
-        li.textContent = `${item.passed ? "已具備" : "可加強"}：${item.label}`;
-        els.rewriteTips.appendChild(li);
+      const dimensionResults = {};
+      dimensions.forEach((dimension) => {
+        const check = checks[dimension.key];
+        dimensionResults[dimension.key] = {
+          score: check.passed ? 4 : 2,
+          diagnosis: check.passed ? check.diagnosis : check.missing,
+          suggestion: check.suggestion
+        };
       });
 
-      if (score >= 82) {
-        const li = document.createElement("li");
-        li.textContent = "這個版本已經接近可直接拿去問 AI 或問人的問題。";
-        els.rewriteTips.appendChild(li);
-      }
+      const dimTotal = dimensions.reduce((sum, dimension) => sum + dimensionResults[dimension.key].score, 0);
+      const lengthBonus = countQuestionChars(userRewrite) >= 34 ? 6 : 0;
+      const overallScore = clampInt(Math.round((dimTotal / 30) * 94) + lengthBonus, 0, 100);
+      const weakDimensions = dimensions
+        .filter((dimension) => dimensionResults[dimension.key].score < 4)
+        .slice(0, 3);
+      const followUps = (weakDimensions.length ? weakDimensions : dimensions.slice(0, 2)).map((dimension) => {
+        const prompts = {
+          purpose: "你希望這個答案最後幫你做出哪個具體判斷？",
+          context: "這個問題發生在什麼人、什麼場景、什麼限制之下？",
+          boundary: "你想把答案限制在哪個時間、範圍或候選選項內？",
+          depth: "你最需要回答者比較哪些取捨、風險或反例？",
+          action: "拿到答案後，你下一步會採取什麼行動？",
+          assumption: "你現在默認了哪些前提，可能需要被檢查？"
+        };
+        return prompts[dimension.key];
+      }).slice(0, 3);
+      const bestChoice = lesson.choices[bestChoiceIndex(lesson)]?.text || userRewrite;
 
-      els.rewriteResult.classList.add("visible");
+      return {
+        overallScore,
+        summary: overallScore >= 82
+          ? "這個改寫已經具備清楚結構，可再補強最低分維度，讓答案更能直接服務決策。"
+          : "這個改寫已比原弱問題更具體，但仍需要補足目的、邊界或假設，才能讓回答更有判斷價值。",
+        dimensions: dimensionResults,
+        followUps,
+        modelRewrite: bestChoice,
+        comparison: {
+          originalWeak: lesson.weak,
+          userRewrite,
+          modelRewrite: bestChoice
+        }
+      };
+    }
+
+    function normalizeCoachResult(raw, lesson, userRewrite) {
+      const fallback = buildLocalCoachResult(lesson, userRewrite);
+      const source = raw?.coach || raw?.result || raw?.evaluation || raw;
+      if (!source || typeof source !== "object") return fallback;
+
+      const dimensionsOut = {};
+      dimensions.forEach((dimension) => {
+        const item = source.dimensions?.[dimension.key] || {};
+        const fallbackItem = fallback.dimensions[dimension.key];
+        dimensionsOut[dimension.key] = {
+          score: clampInt(item.score ?? fallbackItem.score, 0, 5),
+          diagnosis: asText(item.diagnosis) || fallbackItem.diagnosis,
+          suggestion: asText(item.suggestion) || fallbackItem.suggestion
+        };
+      });
+
+      const followUps = Array.isArray(source.followUps)
+        ? source.followUps.map(asText).filter(Boolean).slice(0, 3)
+        : fallback.followUps;
+      const modelRewrite = asText(source.modelRewrite) || fallback.modelRewrite;
+      const comparison = source.comparison && typeof source.comparison === "object" ? source.comparison : {};
+      const dimTotal = dimensions.reduce((sum, dimension) => sum + dimensionsOut[dimension.key].score, 0);
+      const computedScore = Math.round((dimTotal / 30) * 100);
+
+      return {
+        overallScore: clampInt(source.overallScore ?? computedScore, 0, 100),
+        summary: asText(source.summary) || fallback.summary,
+        dimensions: dimensionsOut,
+        followUps: followUps.length ? followUps : fallback.followUps,
+        modelRewrite,
+        comparison: {
+          originalWeak: asText(comparison.originalWeak) || lesson.weak,
+          userRewrite: asText(comparison.userRewrite) || userRewrite,
+          modelRewrite: asText(comparison.modelRewrite) || modelRewrite
+        }
+      };
     }
 
     async function copyQuestion() {
@@ -2562,6 +3068,18 @@
       throw new Error("尚未支援這個供應商。");
     }
 
+    async function callCoachProvider(options) {
+      if (options.provider === "openai") return callOpenAICoach(options);
+      if (options.provider === "gemini") return callGeminiCoach(options);
+      if (options.provider === "anthropic") return callAnthropicCoach(options);
+      if (options.provider === "openrouter") return callOpenRouterCoach(options);
+      if (options.provider === "omlx") return callLocalCompatibleCoach(options);
+      if (options.provider === "local-compatible") return callLocalCompatibleCoach(options);
+      if (options.provider === "ollama") return callOllamaCoach(options);
+      if (options.provider === "compatible") return callOpenAICompatibleCoach(options);
+      throw new Error("尚未支援這個供應商。");
+    }
+
     function buildUserPrompt(topic, lessonCount = 10, includeJsonContract = false, qualityFeedback = "") {
       const lines = [
         `主題或使用場景：${topic}`,
@@ -2591,6 +3109,39 @@
           "JSON 結構必須完全符合：",
           '{"lessons":[{"title":"...","scenario":"...","weak":"...","choices":[{"text":"...","score":90,"dims":{"purpose":5,"context":5,"boundary":4,"depth":4,"action":5,"assumption":4},"note":"..."}],"explanation":"..."}]}',
           `lessons 必須剛好 ${lessonCount} 題，至少 10 題。每題 choices 必須剛好四個。dims 必須包含 purpose、context、boundary、depth、action、assumption，值都是 0 到 5 的整數。`
+        );
+      }
+
+      return lines.join("\n");
+    }
+
+    function estimateCoachMaxTokens() {
+      return 5200;
+    }
+
+    function buildCoachPrompt(lesson, userRewrite, includeJsonContract = false) {
+      const best = lesson.choices[bestChoiceIndex(lesson)]?.text || "";
+      const lines = [
+        `訓練題標題：${lesson.title}`,
+        `使用場景：${lesson.scenario}`,
+        `原弱問題：${lesson.weak}`,
+        `本題參考最佳問題：${best}`,
+        `使用者改寫：${userRewrite}`,
+        "",
+        "請評估使用者改寫，而不是評估參考最佳問題。",
+        "請注意：長句不等於好問題。若只是堆疊條件、缺乏目的或假設檢查，仍應扣分。",
+        "六個維度都要有分數、診斷和建議：purpose=目的、context=情境、boundary=邊界、depth=深度、action=行動、assumption=假設。",
+        "followUps 必須是 1 到 3 條真正能幫使用者補資料的追問。",
+        "modelRewrite 要是可直接拿去問 AI 或問人的高品質問題。"
+      ];
+
+      if (includeJsonContract) {
+        lines.push(
+          "",
+          "只輸出合法 JSON，不要 Markdown，不要程式碼區塊。",
+          "JSON 結構必須完全符合：",
+          '{"overallScore":86,"summary":"...","dimensions":{"purpose":{"score":4,"diagnosis":"...","suggestion":"..."},"context":{"score":4,"diagnosis":"...","suggestion":"..."},"boundary":{"score":4,"diagnosis":"...","suggestion":"..."},"depth":{"score":4,"diagnosis":"...","suggestion":"..."},"action":{"score":4,"diagnosis":"...","suggestion":"..."},"assumption":{"score":4,"diagnosis":"...","suggestion":"..."}},"followUps":["..."],"modelRewrite":"...","comparison":{"originalWeak":"...","userRewrite":"...","modelRewrite":"..."}}',
+          "dimensions 必須包含 purpose、context、boundary、depth、action、assumption。每個 score 都是 0 到 5 的整數，overallScore 是 0 到 100 的整數。"
         );
       }
 
@@ -2830,6 +3381,234 @@
       return parseJsonText(text);
     }
 
+    async function callOpenAICoach({ apiKey, model, lesson, userRewrite }) {
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          input: [
+            { role: "system", content: coachSystemPrompt },
+            { role: "user", content: buildCoachPrompt(lesson, userRewrite, false) }
+          ],
+          text: {
+            format: {
+              type: "json_schema",
+              name: "question_rewrite_coach",
+              strict: true,
+              schema: coachResultSchema
+            }
+          },
+          max_output_tokens: estimateCoachMaxTokens(),
+          store: false
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      return parseJsonText(extractOpenAIText(data));
+    }
+
+    async function callGeminiCoach({ apiKey, model, lesson, userRewrite }) {
+      const modelPath = model.startsWith("models/") ? model : `models/${model}`;
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: coachSystemPrompt }]
+          },
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: buildCoachPrompt(lesson, userRewrite, false) }]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.35,
+            maxOutputTokens: estimateCoachMaxTokens(),
+            responseMimeType: "application/json",
+            responseSchema: toGeminiSchema(coachResultSchema)
+          }
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
+      return parseJsonText(text);
+    }
+
+    async function callAnthropicCoach({ apiKey, model, lesson, userRewrite }) {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: estimateCoachMaxTokens(),
+          system: coachSystemPrompt,
+          messages: [
+            { role: "user", content: buildCoachPrompt(lesson, userRewrite, false) }
+          ],
+          tools: [
+            {
+              name: "coach_question_rewrite",
+              description: "Evaluate and improve a learner's rewritten question.",
+              input_schema: coachResultSchema
+            }
+          ],
+          tool_choice: {
+            type: "tool",
+            name: "coach_question_rewrite"
+          }
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      const toolUse = data.content?.find((item) => item.type === "tool_use" && item.name === "coach_question_rewrite");
+      if (toolUse?.input) return toolUse.input;
+      const text = data.content?.map((item) => item.text || "").join("") || "";
+      return parseJsonText(text);
+    }
+
+    async function callOpenRouterCoach({ apiKey, model, lesson, userRewrite }) {
+      return callCoachChatCompletions({
+        url: "https://openrouter.ai/api/v1/chat/completions",
+        apiKey,
+        model,
+        lesson,
+        userRewrite,
+        extraHeaders: {
+          "HTTP-Referer": location.origin && location.origin !== "null" ? location.href : "https://local.question-gym",
+          "X-OpenRouter-Title": "問題力訓練場"
+        }
+      });
+    }
+
+    async function callOpenAICompatibleCoach({ apiKey, model, endpoint, lesson, userRewrite }) {
+      return callCoachChatCompletions({
+        url: normalizeChatCompletionsEndpoint(endpoint),
+        apiKey,
+        model,
+        lesson,
+        userRewrite,
+        extraHeaders: {},
+        includeJsonContract: true
+      });
+    }
+
+    async function callLocalCompatibleCoach({ apiKey, model, endpoint, lesson, userRewrite }) {
+      const chatEndpoint = normalizeChatCompletionsEndpoint(endpoint);
+      try {
+        return await callCoachChatCompletions({
+          url: chatEndpoint,
+          apiKey,
+          model,
+          lesson,
+          userRewrite,
+          extraHeaders: {},
+          responseFormatMode: "json_object",
+          includeJsonContract: true
+        });
+      } catch (error) {
+        if (!/response_format|json_object|unsupported|unknown/i.test(error.message || "")) throw error;
+        return callCoachChatCompletions({
+          url: chatEndpoint,
+          apiKey,
+          model,
+          lesson,
+          userRewrite,
+          extraHeaders: {},
+          responseFormatMode: "none",
+          includeJsonContract: true
+        });
+      }
+    }
+
+    async function callOllamaCoach({ model, endpoint, lesson, userRewrite }) {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          stream: false,
+          format: "json",
+          options: {
+            temperature: 0.35,
+            num_predict: estimateCoachMaxTokens()
+          },
+          messages: [
+            { role: "system", content: coachSystemPrompt },
+            { role: "user", content: buildCoachPrompt(lesson, userRewrite, true) }
+          ]
+        })
+      });
+
+      const data = await parseProviderResponse(response);
+      const text = data.message?.content || data.response || "";
+      return typeof text === "object" ? text : parseJsonText(text);
+    }
+
+    async function callCoachChatCompletions({
+      url,
+      apiKey,
+      model,
+      lesson,
+      userRewrite,
+      extraHeaders,
+      responseFormatMode = "schema",
+      includeJsonContract = false
+    }) {
+      const headers = {
+        "Content-Type": "application/json",
+        ...extraHeaders
+      };
+      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+      const body = {
+        model,
+        messages: [
+          { role: "system", content: coachSystemPrompt },
+          { role: "user", content: buildCoachPrompt(lesson, userRewrite, includeJsonContract) }
+        ],
+        temperature: 0.35,
+        max_tokens: estimateCoachMaxTokens()
+      };
+
+      if (responseFormatMode === "schema") {
+        body.response_format = {
+          type: "json_schema",
+          json_schema: {
+            name: "question_rewrite_coach",
+            strict: true,
+            schema: coachResultSchema
+          }
+        };
+      } else if (responseFormatMode === "json_object") {
+        body.response_format = { type: "json_object" };
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const data = await parseProviderResponse(response);
+      const text = data.choices?.[0]?.message?.content || "";
+      return parseJsonText(text);
+    }
+
     function normalizeChatCompletionsEndpoint(endpoint) {
       const trimmed = endpoint.trim().replace(/\/+$/, "");
       if (!trimmed) return trimmed;
@@ -2857,6 +3636,14 @@
         return `端點回 404。你可以填 base URL，例如 http://127.0.0.1:11123/v1，頁面會自動呼叫 ${normalized}。若仍失敗，請確認 server 是否提供 /v1/chat/completions。`;
       }
 
+      return message;
+    }
+
+    function formatCoachError(error, provider, endpoint) {
+      const message = formatProviderError(error, provider, endpoint);
+      if (/產題失敗/.test(message)) {
+        return message.replace("產題失敗", "AI 教練評估失敗");
+      }
       return message;
     }
 
@@ -3284,6 +4071,7 @@
     els.nextBtn.addEventListener("click", nextQuestion);
     els.resetBtn.addEventListener("click", resetStats);
     els.scoreRewriteBtn.addEventListener("click", scoreRewrite);
+    els.localScoreRewriteBtn.addEventListener("click", scoreRewriteLocally);
     els.copyBtn.addEventListener("click", copyQuestion);
     els.lessonManagerSelect.addEventListener("change", () => {
       selectedLibraryIndex = clampInt(els.lessonManagerSelect.value, 0, Math.max(0, getGeneratedLessons().length - 1));
@@ -3309,6 +4097,7 @@
     initGeneratorSettings();
     initShareUi();
     renderLibraryManager();
+    renderCoachHistory();
     render();
   </script>
 </body>
