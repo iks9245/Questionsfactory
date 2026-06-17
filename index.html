@@ -740,6 +740,202 @@
       color: var(--ink);
     }
 
+    .weekly-cycle {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .weekly-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .weekly-head h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .weekly-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .weekly-scoreboard {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .weekly-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .week-strip {
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .week-days {
+      min-width: 620px;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(78px, 1fr));
+      gap: 8px;
+    }
+
+    .week-day {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 10px;
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .week-day.today {
+      border-color: var(--teal);
+      box-shadow: inset 0 0 0 1px rgba(20, 125, 115, 0.12);
+    }
+
+    .week-day.done {
+      background: #eff9f7;
+      border-color: #c9dfdc;
+    }
+
+    .week-day.active {
+      background: #fff9ed;
+      border-color: #f0d292;
+    }
+
+    .week-day-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .week-day-score {
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .week-day-focus {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      min-height: 32px;
+      overflow-wrap: anywhere;
+    }
+
+    .week-day-state {
+      width: fit-content;
+      border-radius: 999px;
+      background: #edf2f7;
+      color: #425466;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .week-day.done .week-day-state {
+      background: #e7f5ef;
+      color: var(--teal-dark);
+    }
+
+    .week-day.active .week-day-state {
+      background: #fff4df;
+      color: #7a4d08;
+    }
+
+    .chart-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .chart-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .performance-chart {
+      min-height: 190px;
+      border: 1px solid #edf2f7;
+      border-radius: 8px;
+      background: white;
+      overflow: hidden;
+    }
+
+    .performance-chart svg {
+      display: block;
+      width: 100%;
+      height: 190px;
+    }
+
+    .chart-empty {
+      display: grid;
+      place-items: center;
+      min-height: 190px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 18px;
+    }
+
+    .dimension-trends {
+      display: grid;
+      gap: 9px;
+    }
+
+    .dimension-trend {
+      display: grid;
+      gap: 6px;
+    }
+
+    .dimension-trend-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dimension-trend-head strong {
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .recommendation-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .recommendation-card .btn {
+      width: 100%;
+    }
+
     .library {
       padding: 20px;
       display: grid;
@@ -1288,6 +1484,9 @@
       .quality-summary,
       .training-head,
       .training-grid,
+      .weekly-head,
+      .weekly-scoreboard,
+      .weekly-layout,
       .model-summary,
       .coach-dimensions,
       .comparison-grid,
@@ -1298,6 +1497,18 @@
 
       .training-head {
         display: grid;
+      }
+
+      .weekly-head {
+        display: grid;
+      }
+
+      .weekly-scoreboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .week-days {
+        min-width: 604px;
       }
 
       .path-step {
@@ -1398,6 +1609,67 @@
           <div class="training-card">
             <strong>最近 7 次訓練</strong>
             <div class="session-history" id="trainingHistory"></div>
+          </div>
+        </section>
+
+        <section class="panel weekly-cycle" aria-labelledby="weeklyCycleTitle">
+          <div class="weekly-head">
+            <div>
+              <p class="eyebrow">7 天訓練週期</p>
+              <h3 id="weeklyCycleTitle">本週訓練概況</h3>
+              <p id="weeklyCycleText">完成每日訓練後，這裡會把節奏、進步與下一次方向串起來。</p>
+            </div>
+            <div class="training-time">
+              7 天
+              <span id="weeklyCycleWindow">等待資料</span>
+            </div>
+          </div>
+
+          <div class="weekly-scoreboard">
+            <div class="model-chip">
+              <span>連續天數</span>
+              <strong id="weeklyStreak">0</strong>
+            </div>
+            <div class="model-chip">
+              <span>完成天數</span>
+              <strong id="weeklyCompletedDays">0/7</strong>
+            </div>
+            <div class="model-chip">
+              <span>本週最進步</span>
+              <strong id="weeklyImprovedDim">--</strong>
+            </div>
+            <div class="model-chip">
+              <span>仍最弱</span>
+              <strong id="weeklyWeakDim">--</strong>
+            </div>
+          </div>
+
+          <div class="weekly-layout">
+            <div class="training-card">
+              <strong>最近 7 天狀態</strong>
+              <div class="week-strip">
+                <div class="week-days" id="weeklyDays"></div>
+              </div>
+            </div>
+            <div class="training-card recommendation-card">
+              <strong>下一次訓練方向</strong>
+              <p id="weeklyRecommendation">先完成一輪今日訓練，系統會開始推薦下一次要補強的維度。</p>
+              <button class="btn primary" id="startRecommendedTrainingBtn" type="button">開始推薦訓練</button>
+            </div>
+          </div>
+
+          <div class="weekly-layout">
+            <div class="training-card chart-card">
+              <div class="chart-head">
+                <strong>成效曲線</strong>
+                <span id="weeklyTrendLabel">等待資料</span>
+              </div>
+              <div class="performance-chart" id="weeklyChart" aria-label="最近 7 天訓練分數曲線"></div>
+            </div>
+            <div class="training-card">
+              <strong>六維趨勢</strong>
+              <div class="dimension-trends" id="weeklyDimensionTrends"></div>
+            </div>
           </div>
         </section>
 
@@ -1659,6 +1931,7 @@
     const trainingSessionsKey = "question-gym-training-sessions";
     const activeTrainingKey = "question-gym-active-training";
     const trainingHistoryDisplayLimit = 7;
+    const weeklyCycleDays = 7;
     const publicShareUrl = "https://iks9245.github.io/Questionsfactory/";
     const qualityEngine = {
       minLessons: 10,
@@ -2185,6 +2458,18 @@
       startTrainingBtn: document.getElementById("startTrainingBtn"),
       focusTrainingBtn: document.getElementById("focusTrainingBtn"),
       resetTrainingBtn: document.getElementById("resetTrainingBtn"),
+      weeklyCycleText: document.getElementById("weeklyCycleText"),
+      weeklyCycleWindow: document.getElementById("weeklyCycleWindow"),
+      weeklyStreak: document.getElementById("weeklyStreak"),
+      weeklyCompletedDays: document.getElementById("weeklyCompletedDays"),
+      weeklyImprovedDim: document.getElementById("weeklyImprovedDim"),
+      weeklyWeakDim: document.getElementById("weeklyWeakDim"),
+      weeklyDays: document.getElementById("weeklyDays"),
+      weeklyRecommendation: document.getElementById("weeklyRecommendation"),
+      weeklyChart: document.getElementById("weeklyChart"),
+      weeklyTrendLabel: document.getElementById("weeklyTrendLabel"),
+      weeklyDimensionTrends: document.getElementById("weeklyDimensionTrends"),
+      startRecommendedTrainingBtn: document.getElementById("startRecommendedTrainingBtn"),
       modelSummary: document.getElementById("modelSummary"),
       mastery: document.getElementById("mastery"),
       diagnosis: document.getElementById("diagnosis"),
@@ -3037,9 +3322,62 @@
       return `${year}-${month}-${day}`;
     }
 
-    function createTrainingSession(profile = buildAbilityProfile()) {
-      const targetDimensions = getTrainingTargetDimensions(profile);
-      const lessonIndex = pickTrainingLesson(profile, targetDimensions);
+    function getLocalDate(date = new Date()) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function getDateWithOffset(baseDate = new Date(), offset = 0) {
+      const date = getLocalDate(baseDate);
+      date.setDate(date.getDate() + offset);
+      return date;
+    }
+
+    function getDaySeed(date = new Date()) {
+      return Number(getTodayKey(date).replace(/-/g, "")) || 0;
+    }
+
+    function getSessionDateKey(session) {
+      if (session?.dateKey) return session.dateKey;
+      const rawDate = session?.completedAt || session?.startedAt;
+      const date = rawDate ? new Date(rawDate) : new Date();
+      return Number.isNaN(date.getTime()) ? getTodayKey() : getTodayKey(date);
+    }
+
+    function isCompletedTrainingSession(session) {
+      return Boolean(
+        session?.completedAt &&
+        session.steps?.recognition &&
+        session.steps?.rewrite &&
+        session.steps?.coach
+      );
+    }
+
+    function getCompletedTrainingSessions() {
+      return trainingSessions
+        .filter(isCompletedTrainingSession)
+        .sort((a, b) => new Date(b.completedAt || b.startedAt) - new Date(a.completedAt || a.startedAt));
+    }
+
+    function groupCompletedSessionsByDate(sessions = getCompletedTrainingSessions()) {
+      return sessions.reduce((grouped, session) => {
+        const key = getSessionDateKey(session);
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(session);
+        return grouped;
+      }, {});
+    }
+
+    function formatWeekDate(date) {
+      return date.toLocaleDateString("zh-Hant", { month: "2-digit", day: "2-digit" });
+    }
+
+    function formatWeekday(date) {
+      return date.toLocaleDateString("zh-Hant", { weekday: "short" });
+    }
+
+    function createTrainingSession(profile = buildAbilityProfile(), date = new Date()) {
+      const targetDimensions = getTrainingTargetDimensions(profile, date);
+      const lessonIndex = pickTrainingLesson(profile, targetDimensions, date);
       const labels = targetDimensions.map((dimension) => dimension.label);
       const baselineDimensions = getProfileSnapshot(profile);
       const goalTitle = labels.length
@@ -3049,7 +3387,7 @@
 
       return {
         id: `training-${Date.now()}`,
-        dateKey: getTodayKey(),
+        dateKey: getTodayKey(date),
         startedAt: new Date().toISOString(),
         completedAt: "",
         targetKeys: targetDimensions.map((dimension) => dimension.key),
@@ -3075,9 +3413,37 @@
       };
     }
 
-    function getTrainingTargetDimensions(profile) {
-      if (profile?.weakest?.length) return profile.weakest.slice(0, 2);
-      return dimensions.slice(0, 2);
+    function getTrainingTargetDimensions(profile, date = new Date()) {
+      return getDailyTrainingTargets(profile, date);
+    }
+
+    function getDailyTrainingTargets(profile, date = new Date()) {
+      const seed = getDaySeed(date);
+      const profileDimensions = profile?.dimensions?.length
+        ? profile.dimensions
+        : dimensions.map((dimension) => ({ ...dimension, combined: 0, evidence: 0 }));
+
+      if (!profile?.hasData) {
+        const firstIndex = seed % dimensions.length;
+        const secondIndex = (firstIndex + 2) % dimensions.length;
+        return [dimensions[firstIndex], dimensions[secondIndex]];
+      }
+
+      const ranked = profileDimensions
+        .slice()
+        .sort((a, b) => {
+          const aScore = (a.combined || 0) + Math.min(a.evidence || 0, 3) * 2;
+          const bScore = (b.combined || 0) + Math.min(b.evidence || 0, 3) * 2;
+          if (aScore !== bScore) return aScore - bScore;
+          return dimensions.findIndex((dimension) => dimension.key === a.key) - dimensions.findIndex((dimension) => dimension.key === b.key);
+        });
+      const weakPool = ranked.slice(0, Math.min(4, ranked.length));
+      const primary = weakPool[seed % weakPool.length] || ranked[0];
+      const secondaryPool = weakPool.filter((dimension) => dimension.key !== primary?.key);
+      const secondary = secondaryPool[Math.floor(seed / 7) % Math.max(1, secondaryPool.length)]
+        || ranked.find((dimension) => dimension.key !== primary?.key);
+
+      return [primary, secondary].filter(Boolean).slice(0, 2);
     }
 
     function getProfileSnapshot(profile) {
@@ -3098,9 +3464,9 @@
       return `${evidence} 今天先練「${names}」，安排題目：「${lesson.title}」。先做辨識，再改寫弱問題，最後交給 AI 教練評估。`;
     }
 
-    function pickTrainingLesson(profile, targetDimensions) {
+    function pickTrainingLesson(profile, targetDimensions, date = new Date()) {
       const targetKeys = targetDimensions.map((dimension) => dimension.key);
-      const daySeed = Number(getTodayKey().replace(/-/g, "")) || 0;
+      const daySeed = getDaySeed(date);
       let bestIndex = currentIndex;
       let bestScore = Number.NEGATIVE_INFINITY;
 
@@ -3209,7 +3575,7 @@
       };
       completeTrainingIfReady();
       saveActiveTraining();
-      renderTrainingPath(buildAbilityProfile());
+      renderStats();
     }
 
     function completeTrainingIfReady() {
@@ -3269,6 +3635,119 @@
       return keys
         .map((key) => dimensions.find((dimension) => dimension.key === key)?.label)
         .filter(Boolean);
+    }
+
+    function buildWeeklyCycle(profile = buildAbilityProfile(), today = new Date()) {
+      const completedSessions = getCompletedTrainingSessions();
+      const sessionsByDate = groupCompletedSessionsByDate(completedSessions);
+      const completedKeys = new Set(completedSessions.map(getSessionDateKey));
+      const activeKey = activeTraining && !activeTraining.completedAt ? getSessionDateKey(activeTraining) : "";
+      const todayKey = getTodayKey(today);
+      const days = Array.from({ length: weeklyCycleDays }, (_, index) => {
+        const date = getDateWithOffset(today, index - weeklyCycleDays + 1);
+        const key = getTodayKey(date);
+        const sessions = sessionsByDate[key] || [];
+        const latest = sessions[0] || null;
+        const planTargets = getDailyTrainingTargets(profile, date);
+        const targetLabels = latest?.targetLabels?.length
+          ? latest.targetLabels
+          : planTargets.map((dimension) => dimension.label);
+        const score = latest
+          ? clampInt(latest.finalOverall || latest.baselineOverall, 0, 100)
+          : null;
+
+        return {
+          key,
+          date,
+          isToday: key === todayKey,
+          status: sessions.length ? "done" : key === activeKey ? "active" : "empty",
+          sessions,
+          latest,
+          score,
+          targetLabels,
+          sessionCount: sessions.length
+        };
+      });
+      const dimensionTrends = buildWeeklyDimensionTrends(days, profile);
+      const mostImproved = dimensionTrends
+        .slice()
+        .sort((a, b) => b.delta - a.delta)[0] || null;
+      const weakest = profile.weakest?.[0] || profile.dimensions.slice().sort((a, b) => a.combined - b.combined)[0] || null;
+      const scoredDays = days.filter((day) => Number.isFinite(day.score));
+      const trendDelta = scoredDays.length >= 2
+        ? scoredDays[scoredDays.length - 1].score - scoredDays[0].score
+        : null;
+      const recommendedTargets = getDailyTrainingTargets(profile, today);
+
+      return {
+        days,
+        completedDays: days.filter((day) => day.status === "done").length,
+        streak: getTrainingDayStreak(completedKeys, today),
+        mostImproved,
+        weakest,
+        dimensionTrends,
+        trendDelta,
+        recommendedTargets,
+        recommendation: buildWeeklyRecommendation(profile, days, recommendedTargets)
+      };
+    }
+
+    function getTrainingDayStreak(completedKeys, today = new Date()) {
+      let streak = 0;
+      for (let offset = 0; offset > -366; offset -= 1) {
+        const key = getTodayKey(getDateWithOffset(today, offset));
+        if (!completedKeys.has(key)) break;
+        streak += 1;
+      }
+      return streak;
+    }
+
+    function buildWeeklyDimensionTrends(days, profile) {
+      const sessions = days.flatMap((day) => day.sessions);
+      return dimensions.map((dimension) => {
+        const deltas = sessions
+          .map((session) => {
+            const before = Number(session.baselineDimensions?.[dimension.key]);
+            const after = Number(session.finalDimensions?.[dimension.key]);
+            if (!Number.isFinite(before) || !Number.isFinite(after) || after <= 0) return null;
+            return after - before;
+          })
+          .filter((value) => Number.isFinite(value));
+        const profileDimension = profile.dimensions.find((item) => item.key === dimension.key);
+        const delta = deltas.length
+          ? Math.round(average(deltas))
+          : clampInt(profileDimension?.trend?.delta || 0, -100, 100);
+        const current = profileDimension?.evidence ? profileDimension.combined : 0;
+        const className = delta >= 3 ? "up" : delta <= -3 ? "down" : "flat";
+        const label = delta > 0 ? `+${delta}` : `${delta}`;
+
+        return {
+          key: dimension.key,
+          label: dimension.label,
+          delta,
+          current,
+          className,
+          badge: deltas.length ? label : "累積中"
+        };
+      });
+    }
+
+    function buildWeeklyRecommendation(profile, days, recommendedTargets) {
+      const names = recommendedTargets.map((dimension) => dimension.label).join("、") || "六維基礎";
+      const completedToday = days.some((day) => day.isToday && day.status === "done");
+      const activeToday = days.some((day) => day.isToday && day.status === "active");
+      const weakest = profile.weakest?.[0]?.label || names;
+
+      if (activeToday) {
+        return `先完成今天進行中的訓練；完成後系統會用本週資料更新「${names}」的下一步。`;
+      }
+      if (!profile.hasData) {
+        return `先從「${names}」建立第一筆基準。完成後，系統會開始顯示本週曲線和六維趨勢。`;
+      }
+      if (completedToday) {
+        return `今天已完成一輪。若要再練 10 分鐘，建議補「${names}」，特別看 ${weakest} 是否仍拖慢整體分。`;
+      }
+      return `下一輪先練「${names}」。這是目前弱項與本週輪替後的交集，適合用一題辨識、一題改寫和一次教練評估快速校準。`;
     }
 
     function buildAbilityProfile() {
@@ -3350,6 +3829,7 @@
 
       renderAbilityModel(profile);
       renderTrainingPath(profile);
+      renderWeeklyCycle(profile);
       renderDiagnosis(avg, profile);
       renderHistory();
     }
@@ -3501,6 +3981,126 @@
         value.textContent = session.finalOverall || session.baselineOverall || "--";
         row.append(label, value);
         els.trainingHistory.appendChild(row);
+      });
+    }
+
+    function renderWeeklyCycle(profile = buildAbilityProfile()) {
+      const week = buildWeeklyCycle(profile);
+      const firstDay = week.days[0]?.date || new Date();
+      const lastDay = week.days[week.days.length - 1]?.date || new Date();
+      const improvedText = week.mostImproved && week.mostImproved.delta > 0
+        ? `${week.mostImproved.label} ${week.mostImproved.delta > 0 ? `+${week.mostImproved.delta}` : week.mostImproved.delta}`
+        : "累積中";
+      const weakText = week.weakest?.label || "--";
+
+      els.weeklyCycleWindow.textContent = `${formatWeekDate(firstDay)} - ${formatWeekDate(lastDay)}`;
+      els.weeklyCycleText.textContent = week.completedDays
+        ? `本週已完成 ${week.completedDays} 天訓練，下一輪會依照弱項與週期輪替安排。`
+        : "完成每日訓練後，這裡會把節奏、進步與下一次方向串起來。";
+      els.weeklyStreak.textContent = `${week.streak} 天`;
+      els.weeklyCompletedDays.textContent = `${week.completedDays}/${weeklyCycleDays}`;
+      els.weeklyImprovedDim.textContent = improvedText;
+      els.weeklyWeakDim.textContent = weakText;
+      els.weeklyTrendLabel.textContent = formatWeeklyTrendLabel(week.trendDelta);
+      els.weeklyRecommendation.textContent = week.recommendation;
+
+      renderWeeklyDays(week.days);
+      renderWeeklyChart(week.days);
+      renderWeeklyDimensionTrends(week.dimensionTrends);
+    }
+
+    function formatWeeklyTrendLabel(delta) {
+      if (!Number.isFinite(delta)) return "等待資料";
+      if (delta > 0) return `本週 +${delta}`;
+      if (delta < 0) return `本週 ${delta}`;
+      return "本週持平";
+    }
+
+    function renderWeeklyDays(days) {
+      els.weeklyDays.innerHTML = "";
+      days.forEach((day) => {
+        const card = document.createElement("div");
+        card.className = `week-day ${day.status}${day.isToday ? " today" : ""}`;
+        const stateText = day.status === "done"
+          ? day.sessionCount > 1 ? `${day.sessionCount} 輪` : "完成"
+          : day.status === "active" ? "進行中" : "待訓練";
+        card.innerHTML = `
+          <div class="week-day-head">
+            <span>${formatWeekday(day.date)}</span>
+            <span>${formatWeekDate(day.date)}</span>
+          </div>
+          <div class="week-day-score">${Number.isFinite(day.score) ? day.score : "--"}</div>
+          <div class="week-day-focus">${day.targetLabels.join(" / ") || "六維基礎"}</div>
+          <span class="week-day-state">${stateText}</span>
+        `;
+        els.weeklyDays.appendChild(card);
+      });
+    }
+
+    function renderWeeklyChart(days) {
+      const scored = days
+        .map((day, index) => ({ ...day, index }))
+        .filter((day) => Number.isFinite(day.score));
+
+      if (!scored.length) {
+        els.weeklyChart.innerHTML = `<div class="chart-empty">完成一輪訓練後，這裡會出現最近 7 天成效曲線。</div>`;
+        return;
+      }
+
+      const width = 640;
+      const height = 190;
+      const left = 38;
+      const right = 20;
+      const top = 22;
+      const bottom = 36;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      const pointFor = (day) => {
+        const x = left + (plotWidth / Math.max(1, weeklyCycleDays - 1)) * day.index;
+        const y = top + plotHeight - (clampInt(day.score, 0, 100) / 100) * plotHeight;
+        return { x: Math.round(x), y: Math.round(y) };
+      };
+      const points = scored.map((day) => ({ ...day, ...pointFor(day) }));
+      const path = points.length > 1
+        ? points.map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" ")
+        : "";
+      const circles = points
+        .map((point) => `<circle cx="${point.x}" cy="${point.y}" r="5" fill="#147d73"></circle><text x="${point.x}" y="${Math.max(16, point.y - 10)}" text-anchor="middle" font-size="11" font-weight="800" fill="#243444">${point.score}</text>`)
+        .join("");
+      const labels = days
+        .map((day, index) => {
+          const x = left + (plotWidth / Math.max(1, weeklyCycleDays - 1)) * index;
+          return `<text x="${Math.round(x)}" y="176" text-anchor="middle" font-size="11" font-weight="800" fill="#718096">${formatWeekday(day.date)}</text>`;
+        })
+        .join("");
+
+      els.weeklyChart.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="最近 7 天訓練分數曲線">
+          <line x1="${left}" y1="${top}" x2="${left}" y2="${height - bottom}" stroke="#d8e2ea"></line>
+          <line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="#d8e2ea"></line>
+          <text x="8" y="${top + 4}" font-size="11" font-weight="800" fill="#718096">100</text>
+          <text x="14" y="${height - bottom + 4}" font-size="11" font-weight="800" fill="#718096">0</text>
+          ${path ? `<path d="${path}" fill="none" stroke="#147d73" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>` : ""}
+          ${circles}
+          ${labels}
+        </svg>
+      `;
+    }
+
+    function renderWeeklyDimensionTrends(trends) {
+      els.weeklyDimensionTrends.innerHTML = "";
+      trends.forEach((trend) => {
+        const row = document.createElement("div");
+        row.className = "dimension-trend";
+        const value = clampInt(trend.current, 0, 100);
+        row.innerHTML = `
+          <div class="dimension-trend-head">
+            <strong>${trend.label}</strong>
+            <span class="trend-badge ${trend.className}">${trend.badge}</span>
+          </div>
+          <div class="bar"><span style="width:${value}%"></span></div>
+        `;
+        els.weeklyDimensionTrends.appendChild(row);
       });
     }
 
@@ -4993,6 +5593,7 @@
     els.shareBtn.addEventListener("click", shareProject);
     els.copyShareBtn.addEventListener("click", copyShareLink);
     els.startTrainingBtn.addEventListener("click", () => startTodayTraining(false));
+    els.startRecommendedTrainingBtn.addEventListener("click", () => startTodayTraining(false));
     els.focusTrainingBtn.addEventListener("click", focusTrainingStep);
     els.resetTrainingBtn.addEventListener("click", resetTodayTraining);
     els.targetWeaknessBtn.addEventListener("click", generateWeaknessLessons);
