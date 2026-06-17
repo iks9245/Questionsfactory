@@ -461,7 +461,7 @@
 
     .generator-grid {
       display: grid;
-      grid-template-columns: minmax(150px, 0.9fr) minmax(150px, 0.9fr) minmax(120px, 0.6fr) minmax(180px, 1fr);
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
       gap: 12px;
     }
 
@@ -560,7 +560,7 @@
 
     .quality-summary {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
       gap: 8px;
     }
 
@@ -744,6 +744,13 @@
       flex-wrap: wrap;
       gap: 10px;
       padding: 0;
+    }
+
+    .training-controls {
+      display: grid;
+      grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+      gap: 12px;
+      align-items: end;
     }
 
     .training-summary {
@@ -1561,6 +1568,7 @@
       .library-grid,
       .choice-editor-head,
       .quality-summary,
+      .training-controls,
       .training-head,
       .training-grid,
       .weekly-head,
@@ -1656,10 +1664,21 @@
                 </div>
               </div>
 
-              <div class="training-actions">
-                <button class="btn primary" id="startTrainingBtn" type="button">開始今日 10 分鐘訓練</button>
-                <button class="btn secondary" id="focusTrainingBtn" type="button">前往目前步驟</button>
-                <button class="btn warn" id="resetTrainingBtn" type="button">重開今日訓練</button>
+              <div class="training-controls">
+                <div class="field">
+                  <label for="trainingDifficultySelect">今日難度</label>
+                  <select id="trainingDifficultySelect">
+                    <option value="auto">自動</option>
+                    <option value="easy">入門</option>
+                    <option value="medium">中階</option>
+                    <option value="hard">高階</option>
+                  </select>
+                </div>
+                <div class="training-actions">
+                  <button class="btn primary" id="startTrainingBtn" type="button">開始今日 10 分鐘訓練</button>
+                  <button class="btn secondary" id="focusTrainingBtn" type="button">前往目前步驟</button>
+                  <button class="btn warn" id="resetTrainingBtn" type="button">重開今日訓練</button>
+                </div>
               </div>
 
               <div class="training-grid">
@@ -1721,6 +1740,7 @@
             <div class="round-chip">
               <span id="roundNumber">第 1 題</span>
               <span id="roundTotal">共 6 題</span>
+              <span id="lessonDifficulty">中階</span>
             </div>
           </section>
 
@@ -1966,6 +1986,15 @@
                 <label for="lessonCountInput">題庫數量</label>
                 <input id="lessonCountInput" type="number" min="10" max="30" step="1" value="10">
               </div>
+              <div class="field">
+                <label for="generationDifficultySelect">出題難度</label>
+                <select id="generationDifficultySelect">
+                  <option value="auto">自動</option>
+                  <option value="easy">入門</option>
+                  <option value="medium">中階</option>
+                  <option value="hard">高階</option>
+                </select>
+              </div>
               <div class="field" id="apiKeyField">
                 <label for="apiKeyInput" id="apiKeyLabel">API key</label>
                 <input id="apiKeyInput" type="password" autocomplete="off" placeholder="只在你的瀏覽器中使用">
@@ -2027,6 +2056,14 @@
                   <input id="managerTitleInput" type="text" autocomplete="off">
                 </div>
                 <div class="field">
+                  <label for="managerDifficultySelect">難度</label>
+                  <select id="managerDifficultySelect">
+                    <option value="easy">入門</option>
+                    <option value="medium">中階</option>
+                    <option value="hard">高階</option>
+                  </select>
+                </div>
+                <div class="field">
                   <label for="managerScenarioInput">場景</label>
                   <textarea id="managerScenarioInput"></textarea>
                 </div>
@@ -2068,20 +2105,72 @@
     const coachHistoryKey = "question-gym-coach-history";
     const trainingSessionsKey = "question-gym-training-sessions";
     const activeTrainingKey = "question-gym-active-training";
+    const trainingPreferencesKey = "question-gym-training-preferences";
     const trainingHistoryDisplayLimit = 7;
     const weeklyCycleDays = 7;
     const publicShareUrl = "https://iks9245.github.io/Questionsfactory/";
+    const difficultyProfiles = {
+      easy: {
+        key: "easy",
+        label: "入門",
+        shortLabel: "入門",
+        description: "答案差異較清楚，適合建立六維判斷基礎。",
+        targetScores: [92, 82, 72, 62],
+        minimumLengthRatio: 0.68,
+        warningLengthRatio: 0.76,
+        bestLengthLimit: 1.18,
+        maxTopGap: 12,
+        maxTotalGap: 34,
+        minDistractorDimTotal: 13,
+        minBestDimTotal: 22,
+        minNearBestDistractors: 1,
+        minNoteChars: 7,
+        minExplanationChars: 16,
+        prompt: "入門：最佳選項可以明顯更完整，但仍不能靠字數或低劣干擾項取勝。分數大約 92/82/72/62。"
+      },
+      medium: {
+        key: "medium",
+        label: "中階",
+        shortLabel: "中階",
+        description: "四個選項都合理，靠細節維度分出勝負。",
+        targetScores: [90, 86, 82, 78],
+        minimumLengthRatio: 0.75,
+        warningLengthRatio: 0.82,
+        bestLengthLimit: 1.12,
+        maxTopGap: 8,
+        maxTotalGap: 16,
+        minDistractorDimTotal: 17,
+        minBestDimTotal: 24,
+        minNearBestDistractors: 1,
+        minNoteChars: 8,
+        minExplanationChars: 18,
+        prompt: "中階：四個選項都要像成熟問題，最佳選項只靠一到兩個關鍵結構勝出。分數大約 90/86/82/78。"
+      },
+      hard: {
+        key: "hard",
+        label: "高階",
+        shortLabel: "高階",
+        description: "干擾項也很強，答案不能靠長度、語氣或分數猜出。",
+        targetScores: [88, 86, 84, 82],
+        minimumLengthRatio: 0.84,
+        warningLengthRatio: 0.9,
+        bestLengthLimit: 1.06,
+        maxTopGap: 4,
+        maxTotalGap: 8,
+        minDistractorDimTotal: 20,
+        minBestDimTotal: 25,
+        minNearBestDistractors: 2,
+        minNoteChars: 10,
+        minExplanationChars: 22,
+        prompt: "高階：三個干擾項都必須有真實優點，只缺一個細微但決定性的結構；最佳答案不能更長或更像標準答案。分數大約 88/86/84/82。"
+      }
+    };
+    const difficultyOptions = ["easy", "medium", "hard"];
+    const difficultySelectOptions = ["auto", ...difficultyOptions];
     const qualityEngine = {
       minLessons: 10,
       maxAttempts: 3,
-      targetScores: [90, 86, 82, 78],
-      minimumLengthRatio: 0.75,
-      warningLengthRatio: 0.82,
-      bestLengthLimit: 1.12,
-      minDistractorDimTotal: 17,
-      minBestDimTotal: 24,
-      minNoteChars: 8,
-      minExplanationChars: 18
+      defaultDifficulty: "medium"
     };
 
     const qualityIssueLabels = {
@@ -2092,15 +2181,18 @@
       noteTooShort: "選項評分理由不足",
       explanationTooShort: "解析不足",
       weakDistractor: "干擾選項過弱",
+      shallowDistractor: "干擾項缺少真實優點",
       weakBest: "最佳選項維度不足",
       duplicateChoice: "選項內容重複",
-      scoreGap: "分數破綻過明顯"
+      scoreGap: "分數破綻過明顯",
+      obviousByDims: "維度差距太容易猜",
+      difficultyMismatch: "難度不符合目標"
     };
 
     const lessonSchema = {
       type: "object",
       additionalProperties: false,
-      required: ["title", "scenario", "weak", "choices", "explanation"],
+      required: ["title", "scenario", "weak", "difficulty", "choices", "explanation"],
       properties: {
         title: {
           type: "string",
@@ -2113,6 +2205,11 @@
         weak: {
           type: "string",
           description: "The weak question the learner should rewrite."
+        },
+        difficulty: {
+          type: "string",
+          enum: ["easy", "medium", "hard"],
+          description: "Target lesson difficulty: easy, medium, or hard."
         },
         choices: {
           type: "array",
@@ -2317,12 +2414,12 @@
       "每題都要有一個具體場景、四個候選問題、一個待改寫的弱問題、以及解析。",
       "每題的四個候選問題中，只能有一個結構上最佳，但表面上不能太明顯。",
       "其他三個選項必須是高品質干擾項：看似合理、長度接近、語氣成熟，但各自有一個細微缺陷，例如目的略偏、邊界不精準、假設未暴露、行動性不足、比較框架不完整。",
-      "不要讓最佳選項永遠最長；四個選項的字數差距要小，最短選項至少要有最長選項 70% 的長度。",
+      "不要讓最佳選項永遠最長；四個選項的字數差距要依指定難度收斂，不能靠字數猜答案。",
       "同一批題庫中的題目不得只是換字重複，場景、核心任務、弱問題缺陷要有明顯差異。",
-      "分數要反映高難度判斷：最佳選項 88 到 92 分，第二名 84 到 88 分，其他干擾項 76 到 84 分；不得出現 60 分以下的明顯爛選項。",
+      "分數要依指定難度校準；入門可有較清楚差距，中階要接近，高階必須非常接近。",
       "每個 choice 的 note 要清楚說明該選項的優點與細微缺陷，不能只寫空泛評語。",
       "每題 explanation 要指出最佳選項為什麼勝出，並說明它比第二名多了哪一個關鍵結構。",
-      "dims 的六個維度都必須是 0 到 5 的整數。不要輸出多餘文字。"
+      "每題必須包含 difficulty，值只能是 easy、medium、hard。dims 的六個維度都必須是 0 到 5 的整數。不要輸出多餘文字。"
     ].join("\n");
 
     const coachSystemPrompt = [
@@ -2553,6 +2650,7 @@
     let coachHistory = loadCoachHistory();
     let trainingSessions = loadTrainingSessions();
     let activeTraining = loadActiveTraining();
+    let trainingPreferences = loadTrainingPreferences();
     let selectedLibraryIndex = 0;
 
     const els = {
@@ -2561,6 +2659,7 @@
       streak: document.getElementById("streak"),
       roundNumber: document.getElementById("roundNumber"),
       roundTotal: document.getElementById("roundTotal"),
+      lessonDifficulty: document.getElementById("lessonDifficulty"),
       scenarioTitle: document.getElementById("scenarioTitle"),
       scenarioText: document.getElementById("scenarioText"),
       choices: document.getElementById("choices"),
@@ -2593,6 +2692,7 @@
       trainingSteps: document.getElementById("trainingSteps"),
       trainingSummary: document.getElementById("trainingSummary"),
       trainingHistory: document.getElementById("trainingHistory"),
+      trainingDifficultySelect: document.getElementById("trainingDifficultySelect"),
       startTrainingBtn: document.getElementById("startTrainingBtn"),
       focusTrainingBtn: document.getElementById("focusTrainingBtn"),
       resetTrainingBtn: document.getElementById("resetTrainingBtn"),
@@ -2617,6 +2717,7 @@
       providerSelect: document.getElementById("providerSelect"),
       modelInput: document.getElementById("modelInput"),
       lessonCountInput: document.getElementById("lessonCountInput"),
+      generationDifficultySelect: document.getElementById("generationDifficultySelect"),
       apiKeyInput: document.getElementById("apiKeyInput"),
       apiKeyLabel: document.getElementById("apiKeyLabel"),
       endpointField: document.getElementById("endpointField"),
@@ -2630,6 +2731,7 @@
       lessonManagerSelect: document.getElementById("lessonManagerSelect"),
       libraryStatus: document.getElementById("libraryStatus"),
       managerTitleInput: document.getElementById("managerTitleInput"),
+      managerDifficultySelect: document.getElementById("managerDifficultySelect"),
       managerScenarioInput: document.getElementById("managerScenarioInput"),
       managerWeakInput: document.getElementById("managerWeakInput"),
       choiceEditorList: document.getElementById("choiceEditorList"),
@@ -2674,6 +2776,63 @@
       if (scroll) {
         window.scrollTo?.({ top: 0, behavior: "smooth" });
       }
+    }
+
+    function normalizeDifficulty(value, fallback = qualityEngine.defaultDifficulty) {
+      const key = asText(value).toLowerCase();
+      if (key === "beginner") return "easy";
+      if (key === "intermediate") return "medium";
+      if (key === "advanced") return "hard";
+      if (key === "入門") return "easy";
+      if (key === "中階") return "medium";
+      if (key === "高階") return "hard";
+      if (key === "repaired" || key === "managed") return fallback;
+      return difficultyOptions.includes(key) ? key : fallback;
+    }
+
+    function normalizeDifficultySelection(value, fallback = "auto") {
+      const key = asText(value).toLowerCase();
+      if (key === "auto") return "auto";
+      return normalizeDifficulty(key, fallback === "auto" ? qualityEngine.defaultDifficulty : fallback);
+    }
+
+    function getDifficultyProfile(value) {
+      const key = normalizeDifficulty(value);
+      return difficultyProfiles[key] || difficultyProfiles[qualityEngine.defaultDifficulty];
+    }
+
+    function getDifficultyLabel(value) {
+      return getDifficultyProfile(value).label;
+    }
+
+    function resolveAutoDifficulty(profile = buildAbilityProfile()) {
+      if (!profile?.hasData || profile.evidenceCount < 3) return "easy";
+      if ((profile.overall || 0) >= 84 && profile.evidenceCount >= 8) return "hard";
+      if ((profile.overall || 0) >= 64) return "medium";
+      return "easy";
+    }
+
+    function resolveDifficultySelection(selection, profile = buildAbilityProfile()) {
+      const normalized = normalizeDifficultySelection(selection);
+      return normalized === "auto" ? resolveAutoDifficulty(profile) : normalized;
+    }
+
+    function loadTrainingPreferences() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(trainingPreferencesKey));
+        return {
+          difficulty: normalizeDifficultySelection(saved?.difficulty || "auto")
+        };
+      } catch {
+        return { difficulty: "auto" };
+      }
+    }
+
+    function saveTrainingPreferences() {
+      trainingPreferences = {
+        difficulty: normalizeDifficultySelection(els.trainingDifficultySelect?.value || trainingPreferences.difficulty || "auto")
+      };
+      localStorage.setItem(trainingPreferencesKey, JSON.stringify(trainingPreferences));
     }
 
     function loadStats() {
@@ -2804,6 +2963,8 @@
         completedAt: asText(raw.completedAt),
         targetKeys,
         targetLabels,
+        difficulty: normalizeDifficulty(raw.difficulty || raw.targetDifficulty || qualityEngine.defaultDifficulty),
+        difficultySelection: normalizeDifficultySelection(raw.difficultySelection || raw.trainingDifficulty || "auto"),
         lessonIndex: clampInt(raw.lessonIndex, 0, Math.max(0, lessons.length - 1)),
         goalTitle: asText(raw.goalTitle) || "今日訓練",
         reason: asText(raw.reason),
@@ -2861,7 +3022,7 @@
         })),
         explanation: lesson.explanation,
         source: lesson.source || "題庫管理",
-        difficulty: lesson.difficulty || "managed",
+        difficulty: normalizeDifficulty(lesson.difficulty || inferLessonDifficulty(lesson)),
         quality: lesson.quality || null,
         generated: true
       };
@@ -2883,7 +3044,7 @@
         choices,
         explanation: asText(source.explanation),
         source: asText(source.source) || "題庫管理",
-        difficulty: asText(source.difficulty) || "managed",
+        difficulty: normalizeDifficulty(source.difficulty || inferLessonDifficulty({ choices })),
         quality: source.quality && typeof source.quality === "object" ? source.quality : null,
         generated: true
       };
@@ -2908,7 +3069,7 @@
       generated.forEach((lesson, index) => {
         const option = document.createElement("option");
         option.value = String(index);
-        option.textContent = `${index + 1}. ${lesson.title}`;
+        option.textContent = `${index + 1}. [${getDifficultyLabel(lesson.difficulty)}] ${lesson.title}`;
         els.lessonManagerSelect.appendChild(option);
       });
 
@@ -2922,13 +3083,21 @@
 
       selectedLibraryIndex = clampInt(selectedLibraryIndex, 0, generated.length - 1);
       els.lessonManagerSelect.value = String(selectedLibraryIndex);
-      els.libraryStatus.textContent = `已保存 ${generated.length} 題 AI 題庫。編輯後請按「儲存編輯」。`;
+      els.libraryStatus.textContent = buildLibraryStatus(generated);
       populateLibraryForm(generated[selectedLibraryIndex]);
       setLibraryFormEnabled(true);
     }
 
+    function buildLibraryStatus(generated) {
+      const counts = difficultyOptions
+        .map((key) => `${getDifficultyLabel(key)} ${generated.filter((lesson) => normalizeDifficulty(lesson.difficulty) === key).length}`)
+        .join(" / ");
+      return `已保存 ${generated.length} 題 AI 題庫（${counts}）。編輯後請按「儲存編輯」。`;
+    }
+
     function populateLibraryForm(lesson) {
       els.managerTitleInput.value = lesson?.title || "";
+      els.managerDifficultySelect.value = normalizeDifficulty(lesson?.difficulty || inferLessonDifficulty(lesson));
       els.managerScenarioInput.value = lesson?.scenario || "";
       els.managerWeakInput.value = lesson?.weak || "";
       els.managerExplanationInput.value = lesson?.explanation || "";
@@ -2968,6 +3137,7 @@
       [
         els.lessonManagerSelect,
         els.managerTitleInput,
+        els.managerDifficultySelect,
         els.managerScenarioInput,
         els.managerWeakInput,
         els.managerExplanationInput,
@@ -3000,7 +3170,7 @@
         choices,
         explanation: asText(els.managerExplanationInput.value),
         source: original?.source || "題庫管理",
-        difficulty: "managed",
+        difficulty: normalizeDifficulty(els.managerDifficultySelect.value),
         quality: original?.quality || null,
         generated: true
       };
@@ -3173,6 +3343,7 @@
         endpoint: "",
         topic: "",
         lessonCount: 10,
+        generationDifficulty: "auto",
         rememberKey: false,
         apiKey: ""
       };
@@ -3184,6 +3355,7 @@
           ...fallback,
           ...saved,
           model: saved.model || providerConfigs[saved.provider].defaultModel,
+          generationDifficulty: normalizeDifficultySelection(saved.generationDifficulty || "auto"),
           apiKey: saved.rememberKey ? saved.apiKey || "" : ""
         };
       } catch {
@@ -3199,6 +3371,7 @@
         endpoint: els.endpointInput.value.trim(),
         topic: els.topicInput.value.trim(),
         lessonCount: getLessonCount(),
+        generationDifficulty: normalizeDifficultySelection(els.generationDifficultySelect.value || "auto"),
         rememberKey,
         apiKey: rememberKey ? els.apiKeyInput.value.trim() : ""
       };
@@ -3209,11 +3382,16 @@
       els.providerSelect.value = aiSettings.provider;
       els.modelInput.value = aiSettings.model || providerConfigs[aiSettings.provider].defaultModel;
       els.lessonCountInput.value = clampInt(aiSettings.lessonCount || 10, 10, 30);
+      els.generationDifficultySelect.value = normalizeDifficultySelection(aiSettings.generationDifficulty || "auto");
       els.endpointInput.value = aiSettings.endpoint || "";
       els.topicInput.value = aiSettings.topic || "";
       els.rememberKey.checked = Boolean(aiSettings.rememberKey);
       els.apiKeyInput.value = aiSettings.apiKey || "";
       updateProviderFields();
+    }
+
+    function initTrainingPreferences() {
+      els.trainingDifficultySelect.value = normalizeDifficultySelection(trainingPreferences.difficulty || "auto");
     }
 
     function updateProviderFields(forceDefaultModel = false) {
@@ -3247,9 +3425,10 @@
       els.coachStatus.className = `ai-status visible${type ? ` ${type}` : ""}`;
     }
 
-    function createQualityReport(targetCount) {
+    function createQualityReport(targetCount, targetDifficulty = qualityEngine.defaultDifficulty) {
       return {
         targetCount,
+        targetDifficulty: normalizeDifficulty(targetDifficulty),
         attempts: 0,
         received: 0,
         accepted: 0,
@@ -3258,6 +3437,7 @@
         rejected: 0,
         duplicates: 0,
         hard: 0,
+        difficultyCounts: Object.fromEntries(difficultyOptions.map((key) => [key, 0])),
         issueCounts: {},
         examples: []
       };
@@ -3271,6 +3451,9 @@
       total.rejected += partial.rejected || 0;
       total.duplicates += partial.duplicates || 0;
       total.hard += partial.hard || 0;
+      difficultyOptions.forEach((key) => {
+        total.difficultyCounts[key] = (total.difficultyCounts[key] || 0) + (partial.difficultyCounts?.[key] || 0);
+      });
       Object.entries(partial.issueCounts || {}).forEach(([code, count]) => {
         total.issueCounts[code] = (total.issueCounts[code] || 0) + count;
       });
@@ -3299,6 +3482,7 @@
       const summary = document.createElement("div");
       summary.className = "quality-summary";
       [
+        ["難度", getDifficultyLabel(report.targetDifficulty)],
         ["保留", `${report.accepted}/${report.targetCount}`],
         ["候選", report.received],
         ["修正", report.repaired + report.calibrated],
@@ -3333,10 +3517,16 @@
           item.textContent = `${qualityIssueLabels[code] || code}：${count} 次`;
           list.appendChild(item);
         });
+        const difficultyItem = document.createElement("li");
+        difficultyItem.textContent = `保留難度分布：${difficultyOptions.map((key) => `${getDifficultyLabel(key)} ${report.difficultyCounts?.[key] || 0}`).join(" / ")}`;
+        list.appendChild(difficultyItem);
       } else {
         const item = document.createElement("li");
         item.textContent = "目前候選題尚未出現主要品質問題。";
         list.appendChild(item);
+        const difficultyItem = document.createElement("li");
+        difficultyItem.textContent = `保留難度分布：${difficultyOptions.map((key) => `${getDifficultyLabel(key)} ${report.difficultyCounts?.[key] || 0}`).join(" / ")}`;
+        list.appendChild(difficultyItem);
       }
 
       els.qualityReport.appendChild(list);
@@ -3371,6 +3561,7 @@
       checked = false;
       els.roundNumber.textContent = `第 ${currentIndex + 1} 題`;
       els.roundTotal.textContent = `共 ${lessons.length} 題`;
+      els.lessonDifficulty.textContent = getDifficultyLabel(lesson.difficulty || inferLessonDifficulty(lesson));
       els.scenarioTitle.textContent = lesson.title;
       els.scenarioText.textContent = lesson.scenario;
       els.weakQuestion.textContent = lesson.weak;
@@ -3543,15 +3734,16 @@
       return date.toLocaleDateString("zh-Hant", { weekday: "short" });
     }
 
-    function createTrainingSession(profile = buildAbilityProfile(), date = new Date()) {
+    function createTrainingSession(profile = buildAbilityProfile(), date = new Date(), difficultySelection = trainingPreferences.difficulty || "auto") {
       const targetDimensions = getTrainingTargetDimensions(profile, date);
-      const lessonIndex = pickTrainingLesson(profile, targetDimensions, date);
+      const resolvedDifficulty = resolveDifficultySelection(difficultySelection, profile);
+      const lessonIndex = pickTrainingLesson(profile, targetDimensions, date, resolvedDifficulty);
       const labels = targetDimensions.map((dimension) => dimension.label);
       const baselineDimensions = getProfileSnapshot(profile);
       const goalTitle = labels.length
-        ? `補強「${labels.join(" / ")}」`
+        ? `${getDifficultyLabel(resolvedDifficulty)} · 補強「${labels.join(" / ")}」`
         : "建立六維基礎";
-      const reason = buildTrainingReason(profile, targetDimensions, lessonIndex);
+      const reason = buildTrainingReason(profile, targetDimensions, lessonIndex, resolvedDifficulty);
 
       return {
         id: `training-${Date.now()}`,
@@ -3560,6 +3752,8 @@
         completedAt: "",
         targetKeys: targetDimensions.map((dimension) => dimension.key),
         targetLabels: labels,
+        difficulty: resolvedDifficulty,
+        difficultySelection: normalizeDifficultySelection(difficultySelection),
         lessonIndex,
         goalTitle,
         reason,
@@ -3623,18 +3817,20 @@
       return snapshot;
     }
 
-    function buildTrainingReason(profile, targetDimensions, lessonIndex) {
+    function buildTrainingReason(profile, targetDimensions, lessonIndex, difficulty = qualityEngine.defaultDifficulty) {
       const names = targetDimensions.map((dimension) => dimension.label).join("、") || "六維基礎";
       const lesson = lessons[lessonIndex];
+      const difficultyProfile = getDifficultyProfile(difficulty);
       const evidence = profile.hasData
         ? `目前模型分 ${profile.overall}，證據量為辨識 ${profile.recognitionCount} 題、教練 ${profile.coachCount} 次。`
         : "目前資料還少，先用基礎題建立第一輪能力模型。";
-      return `${evidence} 今天先練「${names}」，安排題目：「${lesson.title}」。先做辨識，再改寫弱問題，最後交給 AI 教練評估。`;
+      return `${evidence} 今天先練「${names}」，採用${difficultyProfile.label}難度：${difficultyProfile.description} 安排題目：「${lesson.title}」。先做辨識，再改寫弱問題，最後交給 AI 教練評估。`;
     }
 
-    function pickTrainingLesson(profile, targetDimensions, date = new Date()) {
+    function pickTrainingLesson(profile, targetDimensions, date = new Date(), difficulty = qualityEngine.defaultDifficulty) {
       const targetKeys = targetDimensions.map((dimension) => dimension.key);
       const daySeed = getDaySeed(date);
+      const targetDifficulty = normalizeDifficulty(difficulty);
       let bestIndex = currentIndex;
       let bestScore = Number.NEGATIVE_INFINITY;
 
@@ -3649,7 +3845,9 @@
         const weakGap = targetKeys.reduce((sum, key) => sum + (5 - (weakChoice?.dims?.[key] || 0)), 0);
         const rotation = ((index + daySeed) % Math.max(1, lessons.length)) / 100;
         const generatedBonus = lesson.generated ? 0.4 : 0;
-        const score = dimSpread * 2 + weakGap + generatedBonus + rotation;
+        const lessonDifficulty = normalizeDifficulty(lesson.difficulty || inferLessonDifficulty(lesson));
+        const difficultyMatch = lessonDifficulty === targetDifficulty ? 3.5 : -1.2;
+        const score = dimSpread * 2 + weakGap + generatedBonus + difficultyMatch + rotation;
         if (score > bestScore) {
           bestScore = score;
           bestIndex = index;
@@ -3664,6 +3862,7 @@
     }
 
     function startTodayTraining(forceNew = false) {
+      saveTrainingPreferences();
       if (activeTraining && !activeTraining.completedAt && !forceNew) {
         currentIndex = clampInt(activeTraining.lessonIndex, 0, lessons.length - 1);
         render();
@@ -3672,7 +3871,7 @@
         return;
       }
 
-      activeTraining = createTrainingSession(buildAbilityProfile());
+      activeTraining = createTrainingSession(buildAbilityProfile(), new Date(), trainingPreferences.difficulty);
       saveActiveTraining();
       currentIndex = activeTraining.lessonIndex;
       render();
@@ -3787,6 +3986,7 @@
 
     function buildTrainingSummary(session) {
       const targets = getDimensionLabels(session.targetKeys).join("、") || "六維基礎";
+      const difficulty = getDifficultyLabel(session.difficulty);
       const improved = getDimensionLabels(session.improvedKeys);
       const needsWork = getDimensionLabels(session.needsWorkKeys);
       const recognitionText = session.recognition
@@ -3797,7 +3997,7 @@
         : "教練評估未完成";
       const improvedText = improved.length ? `本次有進步：${improved.join("、")}。` : "本次尚未看到明顯進步。";
       const needsText = needsWork.length ? `仍需加強：${needsWork.join("、")}。` : "目標維度已達到穩定水位。";
-      return `本次目標是 ${targets}。${recognitionText}；${coachText}。${improvedText}${needsText}`;
+      return `本次目標是 ${targets}，難度 ${difficulty}。${recognitionText}；${coachText}。${improvedText}${needsText}`;
     }
 
     function getDimensionLabels(keys = []) {
@@ -4045,20 +4245,22 @@
 
     function renderTrainingPath(profile = buildAbilityProfile()) {
       const latestSession = trainingSessions[0] || null;
-      const session = activeTraining || latestSession || createTrainingSession(profile);
+      const session = activeTraining || latestSession || createTrainingSession(profile, new Date(), trainingPreferences.difficulty);
       const isActive = Boolean(activeTraining && !activeTraining.completedAt);
       const isCompleted = Boolean(!isActive && latestSession);
       const targetLabels = session.targetLabels?.length ? session.targetLabels : getDimensionLabels(session.targetKeys);
       const lesson = lessons[session.lessonIndex] || lessons[currentIndex];
+      const difficulty = normalizeDifficulty(session.difficulty || inferLessonDifficulty(lesson));
+      const difficultyLabel = getDifficultyLabel(difficulty);
 
       els.trainingGoalTitle.textContent = isCompleted ? "最近訓練小結" : `今日目標：${session.goalTitle}`;
       els.trainingGoalText.textContent = isActive
-        ? `正在訓練 ${targetLabels.join("、") || "六維基礎"}。`
+        ? `正在訓練 ${targetLabels.join("、") || "六維基礎"}，難度：${difficultyLabel}。`
         : isCompleted
-          ? `上次訓練已完成，可再開始一輪 10 分鐘訓練。`
-          : `系統會根據能力模型安排今天最值得練的一輪。`;
-      els.trainingTargetText.textContent = isActive ? "進行中" : isCompleted ? "已完成" : "等待開始";
-      els.trainingReasonText.textContent = session.reason || buildTrainingReason(profile, getTrainingTargetDimensions(profile), session.lessonIndex);
+          ? `上次訓練已完成，可再開始一輪 10 分鐘訓練。最近難度：${difficultyLabel}。`
+          : `系統會根據能力模型安排今天最值得練的一輪。預估難度：${difficultyLabel}。`;
+      els.trainingTargetText.textContent = isActive ? `${difficultyLabel}進行中` : isCompleted ? `${difficultyLabel}完成` : "等待開始";
+      els.trainingReasonText.textContent = session.reason || buildTrainingReason(profile, getTrainingTargetDimensions(profile), session.lessonIndex, difficulty);
 
       renderTrainingSteps(session, isActive);
       renderTrainingSummary(session, isCompleted);
@@ -4145,7 +4347,7 @@
         const dateLabel = Number.isNaN(date.getTime())
           ? "最近"
           : date.toLocaleDateString("zh-Hant", { month: "2-digit", day: "2-digit" });
-        label.textContent = `${dateLabel} · ${session.goalTitle}`;
+        label.textContent = `${dateLabel} · ${getDifficultyLabel(session.difficulty)} · ${session.goalTitle}`;
         const value = document.createElement("strong");
         value.textContent = session.finalOverall || session.baselineOverall || "--";
         row.append(label, value);
@@ -4645,6 +4847,8 @@
       const topic = els.topicInput.value.trim();
       const lessonCount = getLessonCount();
       const config = providerConfigs[provider];
+      const selectedDifficulty = normalizeDifficultySelection(els.generationDifficultySelect.value || "auto");
+      const targetDifficulty = resolveDifficultySelection(selectedDifficulty, buildAbilityProfile());
 
       if (config.requiresKey && !apiKey) {
         setAiStatus("請先填入 API key。", "error");
@@ -4666,10 +4870,10 @@
       saveAiSettings();
       els.generateBtn.disabled = true;
       renderQualityReport(null);
-      setAiStatus(`正在用 ${config.label} 產生 ${lessonCount} 題題庫，品質引擎會先審查候選題...`);
+      setAiStatus(`正在用 ${config.label} 產生 ${lessonCount} 題${getDifficultyLabel(targetDifficulty)}題庫，品質引擎會先審查候選題...`);
 
       try {
-        const result = await generateQualityBatch({ provider, model, apiKey, endpoint, topic, lessonCount, config });
+        const result = await generateQualityBatch({ provider, model, apiKey, endpoint, topic, lessonCount, config, targetDifficulty, selectedDifficulty });
         const generatedBatch = result.lessons;
         if (generatedBatch.length < qualityEngine.minLessons || generatedBatch.length < lessonCount) {
           throw new Error(`品質引擎只保留 ${generatedBatch.length}/${lessonCount} 題通過門檻的題目；已自動重試 ${result.report.attempts} 輪。請換較強模型、縮小主題，或再生成一次。`);
@@ -4690,7 +4894,7 @@
         const adjustedCount = result.report.repaired + result.report.calibrated;
         const repairNote = adjustedCount ? `，校準/修正 ${adjustedCount} 題` : "";
         const retryNote = result.report.attempts > 1 ? `，自動補題 ${result.report.attempts - 1} 輪` : "";
-        setAiStatus(`已加入 ${generatedBatch.length} 題高干擾題庫${repairNote}${retryNote}，已切到第一題：「${generatedBatch[0].title}」。`, "success");
+        setAiStatus(`已加入 ${generatedBatch.length} 題${getDifficultyLabel(targetDifficulty)}高干擾題庫${repairNote}${retryNote}，已切到第一題：「${generatedBatch[0].title}」。`, "success");
       } catch (error) {
         setAiStatus(formatProviderError(error, provider, endpoint), "error");
       } finally {
@@ -4700,9 +4904,10 @@
 
     async function generateQualityBatch(options) {
       const targetCount = options.lessonCount;
+      const targetDifficulty = normalizeDifficulty(options.targetDifficulty || qualityEngine.defaultDifficulty);
       const accepted = [];
       const seenKeys = new Set();
-      const report = createQualityReport(targetCount);
+      const report = createQualityReport(targetCount, targetDifficulty);
       let qualityFeedback = "";
 
       for (let attempt = 1; attempt <= qualityEngine.maxAttempts && accepted.length < targetCount; attempt += 1) {
@@ -4715,12 +4920,14 @@
         const rawLessons = await callSelectedProvider({
           ...options,
           lessonCount: requestCount,
-          qualityFeedback
+          qualityFeedback,
+          targetDifficulty
         });
         const result = normalizeGeneratedLessons(rawLessons, {
           withReport: true,
           limit: remaining,
           targetCount,
+          targetDifficulty,
           seenKeys
         });
 
@@ -4767,9 +4974,13 @@
       throw new Error("尚未支援這個供應商。");
     }
 
-    function buildUserPrompt(topic, lessonCount = 10, includeJsonContract = false, qualityFeedback = "") {
+    function buildUserPrompt(topic, lessonCount = 10, includeJsonContract = false, qualityFeedback = "", targetDifficulty = qualityEngine.defaultDifficulty) {
+      const difficulty = getDifficultyProfile(targetDifficulty);
+      const [bestTarget, secondTarget, thirdTarget, fourthTarget] = difficulty.targetScores;
       const lines = [
         `主題或使用場景：${topic}`,
+        `目標難度：${difficulty.label}（difficulty 必須填 ${difficulty.key}）。`,
+        `難度規格：${difficulty.prompt}`,
         `請產生候選題目數量：${lessonCount} 題。系統只會保留通過品質門檻的題目。`,
         "",
         "請產生一批問題力訓練題，符合指定 JSON schema。",
@@ -4777,11 +4988,12 @@
         "每題 scenario 要交代使用者、目標、限制或困惑。",
         "每題 weak 要是常見但品質不佳的問題。",
         "每題 choices 必須剛好四個，並把最佳問題放在隨機位置。",
-        "四個 choices 必須看起來都合理，長度接近；最短選項至少要達到最長選項 75%，不能讓使用者靠字數猜答案。",
+        `四個 choices 必須看起來都合理，長度接近；最短選項至少要達到最長選項 ${Math.round(difficulty.minimumLengthRatio * 100)}%，不能讓使用者靠字數猜答案。`,
         "最佳選項只能在結構完整度上勝出，不得比其他選項明顯更長，也不能用「列出更多條件」這種粗暴方式勝出。",
         "三個干擾選項都要有真實優點，但各自缺一個關鍵維度；note 要指出該選項的優點與細微缺陷。",
         "同一批題目要覆蓋不同場景與不同問題缺陷，不要用同一模板換字。",
-        "每題分數要接近：最佳選項 88-92，第二名 84-88，其餘 76-84，不要產生低於 70 分的 choice。",
+        `每題分數要按難度接近：最佳約 ${bestTarget}，第二名約 ${secondTarget}，第三名約 ${thirdTarget}，第四名約 ${fourthTarget}。最高與第二名差距不可超過 ${difficulty.maxTopGap} 分。`,
+        `至少 ${difficulty.minNearBestDistractors} 個干擾選項必須接近最佳答案，只能缺少一個細微但重要的維度。`,
         "每題 explanation 必須清楚說明最佳選項為什麼勝出，並點出它比第二名多出的關鍵結構。"
       ];
 
@@ -4794,7 +5006,7 @@
           "",
           "只輸出合法 JSON，不要 Markdown，不要程式碼區塊，不要解釋。",
           "JSON 結構必須完全符合：",
-          '{"lessons":[{"title":"...","scenario":"...","weak":"...","choices":[{"text":"...","score":90,"dims":{"purpose":5,"context":5,"boundary":4,"depth":4,"action":5,"assumption":4},"note":"..."}],"explanation":"..."}]}',
+          `{"lessons":[{"title":"...","scenario":"...","weak":"...","difficulty":"${difficulty.key}","choices":[{"text":"...","score":${bestTarget},"dims":{"purpose":5,"context":5,"boundary":4,"depth":4,"action":5,"assumption":4},"note":"..."}],"explanation":"..."}]}`,
           `lessons 必須剛好 ${lessonCount} 題，至少 10 題。每題 choices 必須剛好四個。dims 必須包含 purpose、context、boundary、depth、action、assumption，值都是 0 到 5 的整數。`
         );
       }
@@ -4835,7 +5047,7 @@
       return lines.join("\n");
     }
 
-    async function callOpenAI({ apiKey, model, topic, lessonCount, qualityFeedback }) {
+    async function callOpenAI({ apiKey, model, topic, lessonCount, qualityFeedback, targetDifficulty }) {
       const response = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
         headers: {
@@ -4846,7 +5058,7 @@
           model,
           input: [
             { role: "system", content: generatorSystemPrompt },
-            { role: "user", content: buildUserPrompt(topic, lessonCount, false, qualityFeedback) }
+            { role: "user", content: buildUserPrompt(topic, lessonCount, false, qualityFeedback, targetDifficulty) }
           ],
           text: {
             format: {
@@ -4865,7 +5077,7 @@
       return parseJsonText(extractOpenAIText(data));
     }
 
-    async function callGemini({ apiKey, model, topic, lessonCount, qualityFeedback }) {
+    async function callGemini({ apiKey, model, topic, lessonCount, qualityFeedback, targetDifficulty }) {
       const modelPath = model.startsWith("models/") ? model : `models/${model}`;
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${encodeURIComponent(apiKey)}`, {
         method: "POST",
@@ -4879,7 +5091,7 @@
           contents: [
             {
               role: "user",
-              parts: [{ text: buildUserPrompt(topic, lessonCount, false, qualityFeedback) }]
+              parts: [{ text: buildUserPrompt(topic, lessonCount, false, qualityFeedback, targetDifficulty) }]
             }
           ],
           generationConfig: {
@@ -4896,7 +5108,7 @@
       return parseJsonText(text);
     }
 
-    async function callAnthropic({ apiKey, model, topic, lessonCount, qualityFeedback }) {
+    async function callAnthropic({ apiKey, model, topic, lessonCount, qualityFeedback, targetDifficulty }) {
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -4910,7 +5122,7 @@
           max_tokens: estimateMaxTokens(lessonCount),
           system: generatorSystemPrompt,
           messages: [
-            { role: "user", content: buildUserPrompt(topic, lessonCount, false, qualityFeedback) }
+            { role: "user", content: buildUserPrompt(topic, lessonCount, false, qualityFeedback, targetDifficulty) }
           ],
           tools: [
             {
@@ -4933,7 +5145,7 @@
       return parseJsonText(text);
     }
 
-    async function callOpenRouter({ apiKey, model, topic, lessonCount, qualityFeedback }) {
+    async function callOpenRouter({ apiKey, model, topic, lessonCount, qualityFeedback, targetDifficulty }) {
       return callChatCompletions({
         url: "https://openrouter.ai/api/v1/chat/completions",
         apiKey,
@@ -4941,6 +5153,7 @@
         topic,
         lessonCount,
         qualityFeedback,
+        targetDifficulty,
         extraHeaders: {
           "HTTP-Referer": location.origin && location.origin !== "null" ? location.href : "https://local.question-gym",
           "X-OpenRouter-Title": "問題力訓練場"
@@ -4948,7 +5161,7 @@
       });
     }
 
-    async function callOpenAICompatible({ apiKey, model, endpoint, topic, lessonCount, qualityFeedback }) {
+    async function callOpenAICompatible({ apiKey, model, endpoint, topic, lessonCount, qualityFeedback, targetDifficulty }) {
       return callChatCompletions({
         url: normalizeChatCompletionsEndpoint(endpoint),
         apiKey,
@@ -4956,12 +5169,13 @@
         topic,
         lessonCount,
         qualityFeedback,
+        targetDifficulty,
         extraHeaders: {},
         includeJsonContract: true
       });
     }
 
-    async function callLocalCompatible({ apiKey, model, endpoint, topic, lessonCount, qualityFeedback }) {
+    async function callLocalCompatible({ apiKey, model, endpoint, topic, lessonCount, qualityFeedback, targetDifficulty }) {
       const chatEndpoint = normalizeChatCompletionsEndpoint(endpoint);
       try {
         return await callChatCompletions({
@@ -4971,6 +5185,7 @@
           topic,
           lessonCount,
           qualityFeedback,
+          targetDifficulty,
           extraHeaders: {},
           responseFormatMode: "json_object",
           includeJsonContract: true
@@ -4984,6 +5199,7 @@
           topic,
           lessonCount,
           qualityFeedback,
+          targetDifficulty,
           extraHeaders: {},
           responseFormatMode: "none",
           includeJsonContract: true
@@ -4991,7 +5207,7 @@
       }
     }
 
-    async function callOllama({ model, endpoint, topic, lessonCount, qualityFeedback }) {
+    async function callOllama({ model, endpoint, topic, lessonCount, qualityFeedback, targetDifficulty }) {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -5007,7 +5223,7 @@
           },
           messages: [
             { role: "system", content: generatorSystemPrompt },
-            { role: "user", content: buildUserPrompt(topic, lessonCount, true, qualityFeedback) }
+            { role: "user", content: buildUserPrompt(topic, lessonCount, true, qualityFeedback, targetDifficulty) }
           ]
         })
       });
@@ -5024,6 +5240,7 @@
       topic,
       lessonCount = 10,
       qualityFeedback = "",
+      targetDifficulty = qualityEngine.defaultDifficulty,
       extraHeaders,
       responseFormatMode = "schema",
       includeJsonContract = false
@@ -5038,7 +5255,7 @@
         model,
         messages: [
           { role: "system", content: generatorSystemPrompt },
-          { role: "user", content: buildUserPrompt(topic, lessonCount, includeJsonContract, qualityFeedback) }
+          { role: "user", content: buildUserPrompt(topic, lessonCount, includeJsonContract, qualityFeedback, targetDifficulty) }
         ],
         temperature: 0.7,
         max_tokens: estimateMaxTokens(lessonCount)
@@ -5417,14 +5634,15 @@
         candidates = [raw];
       }
 
-      const report = createQualityReport(options.targetCount || options.limit || qualityEngine.minLessons);
+      const targetDifficulty = normalizeDifficulty(options.targetDifficulty || qualityEngine.defaultDifficulty);
+      const report = createQualityReport(options.targetCount || options.limit || qualityEngine.minLessons, targetDifficulty);
       const seen = options.seenKeys || new Set();
       const lessonsOut = [];
       report.received = candidates.length;
 
       candidates.forEach((candidate) => {
         if (options.limit && lessonsOut.length >= options.limit) return;
-        const result = validateLessonDetailed(candidate);
+        const result = validateLessonDetailed(candidate, { targetDifficulty });
         result.audit.issues.forEach((issue) => recordQualityIssue(report, issue));
 
         if (!result.lesson) {
@@ -5450,6 +5668,7 @@
         if (result.audit.repaired) report.repaired += 1;
         if (result.audit.calibrated) report.calibrated += 1;
         if (result.lesson.difficulty === "hard") report.hard += 1;
+        report.difficultyCounts[result.lesson.difficulty] = (report.difficultyCounts[result.lesson.difficulty] || 0) + 1;
       });
 
       return options.withReport ? { lessons: lessonsOut, report } : lessonsOut;
@@ -5459,7 +5678,9 @@
       return validateLessonDetailed(raw).lesson;
     }
 
-    function validateLessonDetailed(raw) {
+    function validateLessonDetailed(raw, options = {}) {
+      const hasTargetDifficulty = Boolean(options.targetDifficulty);
+      const targetDifficulty = normalizeDifficulty(options.targetDifficulty || raw?.difficulty || qualityEngine.defaultDifficulty);
       const audit = {
         issues: [],
         repaired: false,
@@ -5493,16 +5714,27 @@
         return { lesson: null, audit };
       }
 
-      const repairedChoices = repairChoiceNotes(choices, audit);
-      const calibratedChoices = calibrateChoiceScores(repairedChoices, audit);
-      const explanation = repairExplanation(asText(source.explanation), calibratedChoices, audit);
+      const providedDifficulty = normalizeDifficulty(source.difficulty || targetDifficulty);
+      const lessonDifficulty = hasTargetDifficulty ? targetDifficulty : providedDifficulty;
+      if (hasTargetDifficulty && source.difficulty && providedDifficulty !== targetDifficulty) {
+        audit.repaired = true;
+        audit.issues.push({
+          code: "difficultyMismatch",
+          severity: "fix",
+          message: `模型回傳 ${getDifficultyLabel(providedDifficulty)}，已改用目標難度 ${getDifficultyLabel(targetDifficulty)} 審核。`
+        });
+      }
+      const repairedChoices = repairChoiceNotes(choices, audit, lessonDifficulty);
+      const calibratedChoices = calibrateChoiceScores(repairedChoices, audit, lessonDifficulty);
+      const explanation = repairExplanation(asText(source.explanation), calibratedChoices, audit, lessonDifficulty);
       const quality = auditLessonQuality({
         title: asText(source.title),
         scenario: asText(source.scenario),
         weak: asText(source.weak),
         explanation,
-        choices: calibratedChoices
-      });
+        choices: calibratedChoices,
+        difficulty: lessonDifficulty
+      }, lessonDifficulty);
       audit.issues.push(...quality.issues);
 
       if (quality.blocked) {
@@ -5515,9 +5747,10 @@
         weak: asText(source.weak),
         choices: shuffleChoices(calibratedChoices),
         explanation,
-        difficulty: quality.score >= 90 && !audit.repaired ? "hard" : "repaired",
+        difficulty: lessonDifficulty,
         quality: {
           score: quality.score,
+          targetDifficulty,
           issues: quality.issues.map((issue) => issue.code)
         },
         generated: Boolean(source.generated)
@@ -5542,9 +5775,10 @@
       };
     }
 
-    function repairChoiceNotes(choices, audit) {
+    function repairChoiceNotes(choices, audit, difficulty = qualityEngine.defaultDifficulty) {
+      const profile = getDifficultyProfile(difficulty);
       return choices.map((choice) => {
-        if (countQuestionChars(choice.note) >= qualityEngine.minNoteChars) return choice;
+        if (countQuestionChars(choice.note) >= profile.minNoteChars) return choice;
         audit.repaired = true;
         audit.issues.push({
           code: "noteTooShort",
@@ -5565,8 +5799,9 @@
       return `這個選項有基本方向，但${weakest.label}仍不夠精準，容易讓回答停在泛論。`;
     }
 
-    function repairExplanation(explanation, choices, audit) {
-      if (countQuestionChars(explanation) >= qualityEngine.minExplanationChars) return explanation;
+    function repairExplanation(explanation, choices, audit, difficulty = qualityEngine.defaultDifficulty) {
+      const profile = getDifficultyProfile(difficulty);
+      if (countQuestionChars(explanation) >= profile.minExplanationChars) return explanation;
       audit.repaired = true;
       audit.issues.push({
         code: "explanationTooShort",
@@ -5577,14 +5812,15 @@
       return `最佳問題同時交代目的、情境與判斷邊界，並能導向下一步行動；相較其他選項，它較少依賴隱含假設。${best.note}`;
     }
 
-    function calibrateChoiceScores(choices, audit = null) {
-      const targetScores = qualityEngine.targetScores;
+    function calibrateChoiceScores(choices, audit = null, difficulty = qualityEngine.defaultDifficulty) {
+      const profile = getDifficultyProfile(difficulty);
+      const targetScores = profile.targetScores;
       const lengths = choices.map((choice) => countQuestionChars(choice.text)).sort((a, b) => a - b);
       const medianLength = (lengths[1] + lengths[2]) / 2 || 1;
       const ranked = choices
         .map((choice, index) => ({
           index,
-          rankValue: getChoiceRankValue(choice, medianLength)
+          rankValue: getChoiceRankValue(choice, medianLength, profile)
         }))
         .sort((a, b) => b.rankValue - a.rankValue);
 
@@ -5601,24 +5837,27 @@
       });
     }
 
-    function getChoiceRankValue(choice, medianLength) {
+    function getChoiceRankValue(choice, medianLength, profile = getDifficultyProfile(qualityEngine.defaultDifficulty)) {
       const dimTotal = dimensions.reduce((sum, dimension) => sum + (choice.dims[dimension.key] || 0), 0);
       const lengthRatio = countQuestionChars(choice.text) / Math.max(1, medianLength);
-      const lengthPenalty = lengthRatio > 1.12 ? Math.min(120, (lengthRatio - 1.12) * 220) : 0;
+      const lengthLimit = profile.bestLengthLimit || 1.12;
+      const lengthPenalty = lengthRatio > lengthLimit ? Math.min(120, (lengthRatio - lengthLimit) * 220) : 0;
       return dimTotal * 8 + choice.score - lengthPenalty;
     }
 
-    function isChallengingChoiceSet(choices) {
+    function isChallengingChoiceSet(choices, difficulty = qualityEngine.defaultDifficulty) {
       return !auditLessonQuality({
         title: "quality-check",
         scenario: "quality-check",
         weak: "quality-check",
         explanation: "quality-check explanation with enough detail",
-        choices
-      }).blocked;
+        choices,
+        difficulty
+      }, difficulty).blocked;
     }
 
-    function auditLessonQuality(lesson) {
+    function auditLessonQuality(lesson, difficulty = qualityEngine.defaultDifficulty) {
+      const profile = getDifficultyProfile(difficulty || lesson.difficulty);
       const issues = [];
       const blocker = (code, message) => issues.push({ code, severity: "blocker", message });
       const warning = (code, message) => issues.push({ code, severity: "warning", message });
@@ -5630,17 +5869,19 @@
       const lowestScore = sortedScores[3];
       const bestCount = choices.filter((choice) => choice.score === bestScore).length;
       if (bestCount !== 1) blocker("scoreGap", "最佳分數不是唯一，或分數排序不清楚。");
-      if (bestScore - secondScore > 8 || bestScore - lowestScore > 16) {
-        warning("scoreGap", "分數差距太大，容易暴露答案。");
+      if (bestScore - secondScore > profile.maxTopGap || bestScore - lowestScore > profile.maxTotalGap) {
+        const message = "分數差距太大，容易暴露答案。";
+        if (profile.key === "hard") blocker("scoreGap", message);
+        else warning("scoreGap", message);
       }
 
       const lengths = choices.map((choice) => countQuestionChars(choice.text));
       const maxLength = Math.max(...lengths);
       const minLength = Math.min(...lengths);
       const lengthRatio = maxLength > 0 ? minLength / maxLength : 0;
-      if (lengthRatio < qualityEngine.minimumLengthRatio) {
+      if (lengthRatio < profile.minimumLengthRatio) {
         blocker("lengthSpread", "四個選項長度差距過大，使用者可以靠字數猜答案。");
-      } else if (lengthRatio < qualityEngine.warningLengthRatio) {
+      } else if (lengthRatio < profile.warningLengthRatio) {
         warning("lengthSpread", "四個選項長度仍略有差距。");
       }
 
@@ -5652,29 +5893,43 @@
       const bestIndex = getBestChoiceIndexFromChoices(choices);
       const bestLength = lengths[bestIndex];
       const otherMaxLength = Math.max(...lengths.filter((_, index) => index !== bestIndex));
-      if (otherMaxLength > 0 && bestLength / otherMaxLength > qualityEngine.bestLengthLimit) {
+      if (otherMaxLength > 0 && bestLength / otherMaxLength > profile.bestLengthLimit) {
         blocker("bestTooLong", "最佳選項明顯比其他選項更長。");
       }
 
       const dimTotals = choices.map(getChoiceDimTotal);
-      if (dimTotals[bestIndex] < qualityEngine.minBestDimTotal) {
+      if (dimTotals[bestIndex] < profile.minBestDimTotal) {
         blocker("weakBest", "最佳選項的六維總分不足。");
       }
 
-      const weakDistractors = dimTotals.filter((_, index) => index !== bestIndex && dimTotals[index] < qualityEngine.minDistractorDimTotal).length;
+      const weakDistractors = dimTotals.filter((_, index) => index !== bestIndex && dimTotals[index] < profile.minDistractorDimTotal).length;
       if (weakDistractors >= 2) {
         blocker("weakDistractor", "兩個以上干擾選項太弱，答案會變明顯。");
       } else if (weakDistractors === 1) {
         warning("weakDistractor", "有一個干擾選項偏弱。");
       }
 
+      const nearBestDistractors = dimTotals.filter((total, index) => index !== bestIndex && dimTotals[bestIndex] - total <= 4).length;
+      if (nearBestDistractors < profile.minNearBestDistractors) {
+        const message = "接近最佳答案的干擾項不足，使用者仍可能靠維度總量猜答案。";
+        if (profile.key === "hard") blocker("shallowDistractor", message);
+        else warning("shallowDistractor", message);
+      }
+
+      const dimGap = Math.max(...dimTotals) - Math.min(...dimTotals);
+      if (dimGap > profile.maxTotalGap + 4) {
+        const message = "六維總分差距過大，答案可能不用真正判斷就能看出。";
+        if (profile.key === "hard") blocker("obviousByDims", message);
+        else warning("obviousByDims", message);
+      }
+
       choices.forEach((choice) => {
-        if (countQuestionChars(choice.note) < qualityEngine.minNoteChars) {
+        if (countQuestionChars(choice.note) < profile.minNoteChars) {
           warning("noteTooShort", "有選項評分理由不足。");
         }
       });
 
-      if (countQuestionChars(lesson.explanation) < qualityEngine.minExplanationChars) {
+      if (countQuestionChars(lesson.explanation) < profile.minExplanationChars) {
         warning("explanationTooShort", "題目解析不足。");
       }
 
@@ -5695,6 +5950,19 @@
 
     function getChoiceDimTotal(choice) {
       return dimensions.reduce((sum, dimension) => sum + (choice.dims[dimension.key] || 0), 0);
+    }
+
+    function inferLessonDifficulty(lesson) {
+      const choices = Array.isArray(lesson?.choices) ? lesson.choices : [];
+      if (choices.length !== 4) return qualityEngine.defaultDifficulty;
+      const scores = choices.map((choice) => clampInt(choice.score, 0, 100)).sort((a, b) => b - a);
+      const topGap = scores[0] - scores[1];
+      const totalGap = scores[0] - scores[3];
+      const dimTotals = choices.map(getChoiceDimTotal).sort((a, b) => b - a);
+      const dimGap = dimTotals[0] - dimTotals[3];
+      if (topGap <= 4 && totalGap <= 10 && dimGap <= 8) return "hard";
+      if (topGap <= 9 && totalGap <= 20 && dimGap <= 12) return "medium";
+      return "easy";
     }
 
     function getLessonFingerprint(lesson) {
@@ -5779,10 +6047,15 @@
     els.openProgressViewBtn.addEventListener("click", () => switchAppView("progress", { scroll: true }));
     els.focusTrainingBtn.addEventListener("click", focusTrainingStep);
     els.resetTrainingBtn.addEventListener("click", resetTodayTraining);
+    els.trainingDifficultySelect.addEventListener("change", () => {
+      saveTrainingPreferences();
+      renderTrainingPath(buildAbilityProfile());
+    });
     els.targetWeaknessBtn.addEventListener("click", generateWeaknessLessons);
     els.providerSelect.addEventListener("change", () => updateProviderFields(true));
     els.modelInput.addEventListener("input", saveAiSettings);
     els.lessonCountInput.addEventListener("input", saveAiSettings);
+    els.generationDifficultySelect.addEventListener("change", saveAiSettings);
     els.endpointInput.addEventListener("input", saveAiSettings);
     els.topicInput.addEventListener("input", saveAiSettings);
     els.apiKeyInput.addEventListener("input", saveAiSettings);
@@ -5791,6 +6064,7 @@
     els.clearGeneratedBtn.addEventListener("click", clearGeneratedLessons);
 
     initGeneratorSettings();
+    initTrainingPreferences();
     initShareUi();
     switchAppView("training");
     renderLibraryManager();
