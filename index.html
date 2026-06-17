@@ -861,6 +861,37 @@
       gap: 12px;
     }
 
+    .model-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .model-chip {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbfd;
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .model-chip span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .model-chip strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
     .mastery-row {
       display: grid;
       gap: 6px;
@@ -877,6 +908,58 @@
     .mastery-label strong {
       color: var(--ink);
       font-weight: 800;
+    }
+
+    .mastery-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .trend-badge {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: #edf2f7;
+      color: #425466;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .trend-badge.up {
+      background: #e7f5ef;
+      color: var(--teal-dark);
+    }
+
+    .trend-badge.down {
+      background: #fff0ec;
+      color: #9d432e;
+    }
+
+    .trend-badge.flat {
+      background: #fff4df;
+      color: #7a4d08;
+    }
+
+    .model-action {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .model-action .btn {
+      width: 100%;
+    }
+
+    .model-action-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
     }
 
     .insight {
@@ -1005,6 +1088,7 @@
       .library-grid,
       .choice-editor-head,
       .quality-summary,
+      .model-summary,
       .coach-dimensions,
       .comparison-grid,
       .intro-points,
@@ -1051,7 +1135,7 @@
             <h2 id="projectIntroTitle">用問題驅動思考，而不是只追逐答案</h2>
           </div>
           <p>
-            Questionsfactory 是一個單頁訓練工具，目標是幫使用者建立「判斷問題品質」的能力。它透過辨識、解析、改寫與 AI 教練回饋，訓練使用者看見目的、情境、邊界、深度、行動與假設。
+            Questionsfactory 是一個單頁訓練工具，目標是幫使用者建立「判斷問題品質」的能力。它透過辨識、解析、改寫、AI 教練回饋與個人化能力模型，訓練使用者看見目的、情境、邊界、深度、行動與假設。
           </p>
           <div class="intro-points" aria-label="項目核心能力">
             <div class="intro-point">
@@ -1268,8 +1352,13 @@
 
       <aside class="sidebar" aria-label="能力面板">
         <section class="panel side-panel">
-          <h3>能力面板</h3>
+          <h3>能力模型</h3>
+          <div class="model-summary" id="modelSummary"></div>
           <div class="mastery" id="mastery"></div>
+          <div class="model-action">
+            <button class="btn primary" id="targetWeaknessBtn" type="button">生成弱項題庫</button>
+            <p class="model-action-note">系統會根據目前最弱維度填入主題並呼叫你選擇的 LLM。</p>
+          </div>
         </section>
 
         <section class="panel side-panel">
@@ -1833,10 +1922,12 @@
       compareWeak: document.getElementById("compareWeak"),
       compareUser: document.getElementById("compareUser"),
       compareModel: document.getElementById("compareModel"),
+      modelSummary: document.getElementById("modelSummary"),
       mastery: document.getElementById("mastery"),
       diagnosis: document.getElementById("diagnosis"),
       history: document.getElementById("history"),
       coachHistory: document.getElementById("coachHistory"),
+      targetWeaknessBtn: document.getElementById("targetWeaknessBtn"),
       providerSelect: document.getElementById("providerSelect"),
       modelInput: document.getElementById("modelInput"),
       lessonCountInput: document.getElementById("lessonCountInput"),
@@ -1950,6 +2041,7 @@
       coachHistory = coachHistory.slice(0, 12);
       saveCoachHistory();
       renderCoachHistory();
+      renderStats();
     }
 
     function loadGeneratedLessons() {
@@ -2601,45 +2693,136 @@
       render();
     }
 
+    function buildAbilityProfile() {
+      const dimensionProfiles = dimensions.map((dimension) => {
+        const mastery = stats.mastery?.[dimension.key] || { total: 0, count: 0 };
+        const recognitionScore = mastery.count ? Math.round((mastery.total / mastery.count) * 20) : null;
+        const coachScores = coachHistory
+          .map((item) => item.dimensions?.[dimension.key]?.score)
+          .map((score) => Number(score))
+          .filter((score) => Number.isFinite(score) && score > 0);
+        const coachScore = coachScores.length ? Math.round(average(coachScores) * 20) : null;
+        const recognitionWeight = recognitionScore === null ? 0 : 0.45;
+        const coachWeight = coachScore === null ? 0 : 0.55;
+        const weightTotal = recognitionWeight + coachWeight;
+        const combined = weightTotal
+          ? Math.round(((recognitionScore || 0) * recognitionWeight + (coachScore || 0) * coachWeight) / weightTotal)
+          : 0;
+
+        return {
+          ...dimension,
+          recognitionScore,
+          coachScore,
+          combined,
+          recognitionCount: mastery.count || 0,
+          coachCount: coachScores.length,
+          evidence: (mastery.count || 0) + coachScores.length,
+          trend: getDimensionTrend(dimension.key)
+        };
+      });
+
+      const withEvidence = dimensionProfiles.filter((dimension) => dimension.evidence > 0);
+      const rankedBase = withEvidence.length ? withEvidence : dimensionProfiles;
+      const weakest = rankedBase.slice().sort((a, b) => a.combined - b.combined).slice(0, 2);
+      const strongest = withEvidence.slice().sort((a, b) => b.combined - a.combined).slice(0, 1);
+
+      return {
+        dimensions: dimensionProfiles,
+        hasData: withEvidence.length > 0,
+        overall: withEvidence.length ? Math.round(average(withEvidence.map((dimension) => dimension.combined))) : 0,
+        weakest,
+        strongest,
+        recognitionCount: stats.roundsDone || 0,
+        coachCount: coachHistory.length,
+        evidenceCount: (stats.roundsDone || 0) + coachHistory.length
+      };
+    }
+
+    function average(values) {
+      if (!values.length) return 0;
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function getDimensionTrend(key) {
+      const scores = coachHistory
+        .map((item) => Number(item.dimensions?.[key]?.score))
+        .filter((score) => Number.isFinite(score) && score > 0);
+
+      if (scores.length >= 4) {
+        const recent = average(scores.slice(0, 3));
+        const older = average(scores.slice(3, 6));
+        const delta = Math.round((recent - older) * 20);
+        if (delta >= 8) return { label: `進步 +${delta}`, className: "up", delta };
+        if (delta <= -8) return { label: `下滑 ${delta}`, className: "down", delta };
+        return { label: "穩定", className: "flat", delta };
+      }
+
+      if (scores.length > 0) return { label: "累積中", className: "flat", delta: 0 };
+      const mastery = stats.mastery?.[key];
+      if ((mastery?.count || 0) >= 3) return { label: "辨識中", className: "flat", delta: 0 };
+      return { label: "待資料", className: "flat", delta: 0 };
+    }
+
     function renderStats() {
       const avg = stats.roundsDone ? Math.round(stats.totalScore / stats.roundsDone) : 0;
+      const profile = buildAbilityProfile();
       els.roundsDone.textContent = stats.roundsDone;
       els.avgScore.textContent = avg;
       els.streak.textContent = stats.streak;
 
+      renderAbilityModel(profile);
+      renderDiagnosis(avg, profile);
+      renderHistory();
+    }
+
+    function renderAbilityModel(profile) {
+      els.modelSummary.innerHTML = "";
+      [
+        ["模型分", profile.hasData ? `${profile.overall}` : "--"],
+        ["最弱項", profile.weakest.map((dimension) => dimension.label).join(" / ")],
+        ["證據量", `${profile.recognitionCount} 題 / ${profile.coachCount} 評`]
+      ].forEach(([label, value]) => {
+        const chip = document.createElement("div");
+        chip.className = "model-chip";
+        const labelEl = document.createElement("span");
+        labelEl.textContent = label;
+        const valueEl = document.createElement("strong");
+        valueEl.textContent = value;
+        chip.append(labelEl, valueEl);
+        els.modelSummary.appendChild(chip);
+      });
+
       els.mastery.innerHTML = "";
-      dimensions.forEach((dimension) => {
-        const item = stats.mastery[dimension.key];
-        const value = item.count ? Math.round((item.total / item.count) * 20) : 0;
+      profile.dimensions.forEach((dimension) => {
+        const value = dimension.evidence ? dimension.combined : 0;
+        const sourceText = dimension.evidence
+          ? `辨識 ${dimension.recognitionCount} / 教練 ${dimension.coachCount}`
+          : "尚無紀錄";
         const row = document.createElement("div");
         row.className = "mastery-row";
         row.innerHTML = `
           <div class="mastery-label">
             <strong>${dimension.label}</strong>
-            <span>${value}%</span>
+            <span>${dimension.evidence ? `${value}%` : "--"}</span>
           </div>
           <div class="bar"><span style="width:${value}%"></span></div>
+          <div class="mastery-meta">
+            <span>${sourceText}</span>
+            <span class="trend-badge ${dimension.trend.className}">${dimension.trend.label}</span>
+          </div>
         `;
         els.mastery.appendChild(row);
       });
-
-      renderDiagnosis(avg);
-      renderHistory();
     }
 
-    function renderDiagnosis(avg) {
-      if (!stats.roundsDone) {
-        els.diagnosis.innerHTML = "<strong>尚未開始</strong>先完成一題，系統會根據你的選擇找出最需要訓練的維度。";
+    function renderDiagnosis(avg, profile = buildAbilityProfile()) {
+      if (!profile.hasData) {
+        els.diagnosis.innerHTML = "<strong>尚未開始</strong>先完成一題辨識訓練或一次 AI 教練評估，系統會開始建立你的個人化問題能力模型。";
         return;
       }
 
-      const weakest = dimensions
-        .map((dimension) => {
-          const item = stats.mastery[dimension.key];
-          const value = item.count ? item.total / item.count : 0;
-          return { ...dimension, value };
-        })
-        .sort((a, b) => a.value - b.value)[0];
+      const weakest = profile.weakest[0];
+      const second = profile.weakest[1];
 
       const diagnosisMap = {
         purpose: "先問自己：我希望答案幫我做什麼判斷？",
@@ -2650,7 +2833,39 @@
         assumption: "把你心裡已經相信的前提攤開，才有機會被修正。"
       };
 
-      els.diagnosis.innerHTML = `<strong>目前平均 ${avg} 分，最弱維度是「${weakest.label}」</strong>${diagnosisMap[weakest.key]}`;
+      const secondText = second ? `，次弱是「${second.label}」` : "";
+      const evidenceText = `辨識 ${profile.recognitionCount} 題，教練 ${profile.coachCount} 次`;
+      els.diagnosis.innerHTML = `<strong>模型分 ${profile.overall}，最弱維度是「${weakest.label}」${secondText}</strong>${diagnosisMap[weakest.key]} 目前證據量：${evidenceText}。辨識題平均分 ${avg}。`;
+    }
+
+    function buildWeaknessTrainingTopic(profile = buildAbilityProfile()) {
+      const weak = profile.weakest.length ? profile.weakest : dimensions.slice(0, 2);
+      const weakNames = weak.map((dimension) => dimension.label).join("、");
+      const focusMap = {
+        purpose: "讓使用者練習把問題連到明確判斷、決策或輸出目的",
+        context: "讓使用者練習補上角色、場景、目前狀態與限制",
+        boundary: "讓使用者練習收斂時間、範圍、對象、資源或比較條件",
+        depth: "讓使用者練習提出比較、取捨、風險、反例與原因分析",
+        action: "讓使用者練習把問題導向下一步方案、指標或決策",
+        assumption: "讓使用者練習暴露前提、盲點、風險與可能錯誤假設"
+      };
+      const focusLines = weak.map((dimension) => `${dimension.label}：${focusMap[dimension.key]}`).join("；");
+      const evidenceText = profile.hasData
+        ? `目前模型分 ${profile.overall}，證據量為辨識 ${profile.recognitionCount} 題、教練 ${profile.coachCount} 次。`
+        : "目前尚未累積足夠紀錄，請先用基礎題校準使用者的六維能力。";
+
+      return `${evidenceText} 請生成一組問題力訓練題，專注訓練使用者最弱維度：${weakNames}。訓練重點：${focusLines}。題目要保持高干擾，四個選項長度接近，不能讓最佳答案靠字數或條件堆疊變明顯。`;
+    }
+
+    async function generateWeaknessLessons() {
+      const profile = buildAbilityProfile();
+      const weakNames = profile.weakest.map((dimension) => dimension.label).join("、") || "六維基礎";
+      els.topicInput.value = buildWeaknessTrainingTopic(profile);
+      els.lessonCountInput.value = Math.max(10, getLessonCount());
+      saveAiSettings();
+      els.topicInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      setAiStatus(`已根據能力模型鎖定「${weakNames}」，正在準備生成弱項題庫...`);
+      await generateLesson();
     }
 
     function renderHistory() {
@@ -4084,6 +4299,7 @@
     els.importLessonsInput.addEventListener("change", importGeneratedLessonsFromFile);
     els.shareBtn.addEventListener("click", shareProject);
     els.copyShareBtn.addEventListener("click", copyShareLink);
+    els.targetWeaknessBtn.addEventListener("click", generateWeaknessLessons);
     els.providerSelect.addEventListener("change", () => updateProviderFields(true));
     els.modelInput.addEventListener("input", saveAiSettings);
     els.lessonCountInput.addEventListener("input", saveAiSettings);
