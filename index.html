@@ -1492,6 +1492,45 @@
       margin-bottom: 12px;
     }
 
+    .mistake-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 0 0 12px;
+    }
+
+    .mistake-filters,
+    .mistake-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mistake-filter-btn {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--muted);
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mistake-filter-btn.active {
+      border-color: var(--teal);
+      background: #eff9f7;
+      color: var(--teal-dark);
+    }
+
+    .mistake-actions .btn {
+      min-height: 36px;
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
     .mistake-list {
       display: grid;
       gap: 10px;
@@ -2004,6 +2043,17 @@
             <section class="panel side-panel">
               <h3>錯題復盤</h3>
               <div class="mistake-summary" id="mistakeSummary"></div>
+              <div class="mistake-toolbar">
+                <div class="mistake-filters" role="group" aria-label="錯題復盤篩選">
+                  <button class="mistake-filter-btn active" type="button" data-mistake-filter="all" aria-pressed="true">全部</button>
+                  <button class="mistake-filter-btn" type="button" data-mistake-filter="recognition" aria-pressed="false">辨識錯</button>
+                  <button class="mistake-filter-btn" type="button" data-mistake-filter="coach" aria-pressed="false">教練低分</button>
+                </div>
+                <div class="mistake-actions">
+                  <button class="btn secondary" id="startMistakeTrainingBtn" type="button">用錯因訓練</button>
+                  <button class="btn warn" id="clearMistakesBtn" type="button">清除復盤</button>
+                </div>
+              </div>
               <div class="mistake-list" id="mistakeReview"></div>
             </section>
           </div>
@@ -2736,6 +2786,7 @@
     let activeTraining = loadActiveTraining();
     let trainingPreferences = loadTrainingPreferences();
     let mistakeReview = loadMistakeReview();
+    let mistakeFilter = "all";
     let selectedLibraryIndex = 0;
 
     const els = {
@@ -2793,6 +2844,9 @@
       weeklyTrendLabel: document.getElementById("weeklyTrendLabel"),
       weeklyDimensionTrends: document.getElementById("weeklyDimensionTrends"),
       startRecommendedTrainingBtn: document.getElementById("startRecommendedTrainingBtn"),
+      mistakeFilterButtons: [...document.querySelectorAll("[data-mistake-filter]")],
+      startMistakeTrainingBtn: document.getElementById("startMistakeTrainingBtn"),
+      clearMistakesBtn: document.getElementById("clearMistakesBtn"),
       modelSummary: document.getElementById("modelSummary"),
       mastery: document.getElementById("mastery"),
       diagnosis: document.getElementById("diagnosis"),
@@ -3036,6 +3090,38 @@
         })
       ].slice(0, mistakeReviewLimit);
       saveMistakeReview();
+    }
+
+    function getFilteredMistakeReviewRecords() {
+      if (mistakeFilter === "recognition") return mistakeReview.filter((item) => item.type === "recognition");
+      if (mistakeFilter === "coach") return mistakeReview.filter((item) => item.type === "coach");
+      return mistakeReview;
+    }
+
+    function setMistakeFilter(value) {
+      mistakeFilter = ["all", "recognition", "coach"].includes(value) ? value : "all";
+      renderMistakeReview(buildAbilityProfile());
+    }
+
+    function clearMistakeReview() {
+      if (!mistakeReview.length) {
+        showToast("目前沒有錯題復盤可清除。");
+        return;
+      }
+      mistakeReview = [];
+      mistakeFilter = "all";
+      saveMistakeReview();
+      renderStats();
+      showToast("錯題復盤已清除。");
+    }
+
+    function startMistakeTraining() {
+      const profile = buildAbilityProfile();
+      if (!profile.mistakeProfile?.count) {
+        showToast("先累積一筆錯題復盤，再用錯因開訓練。");
+        return;
+      }
+      startTodayTraining(true);
     }
 
     function classifyChoiceGap(selected, bestChoice) {
@@ -4884,7 +4970,25 @@
     }
 
     function renderMistakeReview(profile = buildAbilityProfile()) {
-      const mistakeProfile = profile.mistakeProfile || buildMistakeProfile();
+      const visibleRecords = getFilteredMistakeReviewRecords();
+      const mistakeProfile = mistakeFilter === "all" && profile.mistakeProfile
+        ? profile.mistakeProfile
+        : buildMistakeProfile(visibleRecords);
+      const hasAnyMistakes = mistakeReview.length > 0;
+      const filterLabels = {
+        all: "全部",
+        recognition: "辨識錯",
+        coach: "教練低分"
+      };
+      els.mistakeFilterButtons.forEach((button) => {
+        const active = button.dataset.mistakeFilter === mistakeFilter;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+        button.disabled = !hasAnyMistakes;
+      });
+      els.startMistakeTrainingBtn.disabled = !hasAnyMistakes;
+      els.clearMistakesBtn.disabled = !hasAnyMistakes;
+
       els.mistakeSummary.innerHTML = "";
       const topText = mistakeProfile.top.map((dimension) => dimension.label).join(" / ") || "--";
       [
@@ -4908,7 +5012,9 @@
         const empty = document.createElement("div");
         empty.className = "history-row";
         const label = document.createElement("span");
-        label.textContent = "尚無錯題復盤";
+        label.textContent = hasAnyMistakes
+          ? `${filterLabels[mistakeFilter] || "目前篩選"}沒有紀錄`
+          : "尚無錯題復盤";
         const value = document.createElement("strong");
         value.textContent = "0";
         empty.append(label, value);
@@ -6462,6 +6568,11 @@
     els.openProgressViewBtn.addEventListener("click", () => switchAppView("progress", { scroll: true }));
     els.focusTrainingBtn.addEventListener("click", focusTrainingStep);
     els.resetTrainingBtn.addEventListener("click", resetTodayTraining);
+    els.mistakeFilterButtons.forEach((button) => {
+      button.addEventListener("click", () => setMistakeFilter(button.dataset.mistakeFilter));
+    });
+    els.startMistakeTrainingBtn.addEventListener("click", startMistakeTraining);
+    els.clearMistakesBtn.addEventListener("click", clearMistakeReview);
     els.trainingDifficultySelect.addEventListener("change", () => {
       saveTrainingPreferences();
       renderTrainingPath(buildAbilityProfile());
