@@ -150,6 +150,54 @@
       box-shadow: var(--shadow);
     }
 
+    .intro {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .intro h2 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+      max-width: 78ch;
+    }
+
+    .intro-points {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .intro-point {
+      min-height: 86px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbfd;
+      padding: 13px 14px;
+    }
+
+    .intro-point strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .intro-point span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
     .scenario {
       padding: 22px;
       display: grid;
@@ -723,6 +771,7 @@
 
       .feedback-grid,
       .generator-grid,
+      .intro-points,
       .sidebar {
         grid-template-columns: 1fr;
       }
@@ -736,8 +785,8 @@
         <div class="brand">
           <div class="mark" aria-hidden="true">Q</div>
           <div>
-            <h1>問題力訓練場</h1>
-            <p>先判斷問題品質，再練習把普通問題升級。</p>
+            <h1>Questionsfactory</h1>
+            <p>問題力訓練場：先判斷品質，再升級提問。</p>
           </div>
         </div>
         <div class="top-actions" aria-label="目前訓練進度">
@@ -759,6 +808,30 @@
 
     <main class="main">
       <div class="workspace">
+        <section class="panel intro" aria-labelledby="projectIntroTitle">
+          <div>
+            <p class="eyebrow">Project</p>
+            <h2 id="projectIntroTitle">用問題驅動思考，而不是只追逐答案</h2>
+          </div>
+          <p>
+            Questionsfactory 是一個單頁訓練工具，目標是幫使用者建立「判斷問題品質」的能力。它透過辨識、解析與改寫三個動作，訓練使用者看見目的、情境、邊界、深度、行動與假設。
+          </p>
+          <div class="intro-points" aria-label="項目核心能力">
+            <div class="intro-point">
+              <strong>辨識好問題</strong>
+              <span>從多個相似選項中判斷哪個問題更能推動思考。</span>
+            </div>
+            <div class="intro-point">
+              <strong>升級弱問題</strong>
+              <span>把空泛、封閉或失焦的問題改寫成可行動的問題。</span>
+            </div>
+            <div class="intro-point">
+              <strong>接入 LLM 題庫</strong>
+              <span>支援雲端與本機模型，產生新的高干擾訓練題。</span>
+            </div>
+          </div>
+        </section>
+
         <section class="panel generator" aria-labelledby="generatorTitle">
           <div class="section-head" style="padding:0">
             <div>
@@ -817,7 +890,7 @@
           </div>
 
           <div class="generator-note">
-            預設一次產生 10 題，最多 30 題。生成器會要求高難度干擾選項，並擋掉分數差太大、最佳選項明顯更長的題目。雲端 API key 會從這個瀏覽器直接送到你選擇的供應商。本機端點可填 base URL，例如 http://127.0.0.1:11123/v1，頁面會自動補成 /chat/completions；若瀏覽器擋住 localhost 請求，通常需要在本機模型服務開啟 CORS。若勾選記住，key 會以純文字存在這台瀏覽器的 localStorage。
+            預設一次產生 10 題，最多 30 題。生成器會要求高難度干擾選項，並做本地分數校準，避免「越長越像答案」。雲端 API key 會從這個瀏覽器直接送到你選擇的供應商。本機端點可填 base URL，例如 http://127.0.0.1:11123/v1，頁面會自動補成 /chat/completions；若瀏覽器擋住 localhost 請求，通常需要在本機模型服務開啟 CORS。若勾選記住，key 會以純文字存在這台瀏覽器的 localStorage。
           </div>
           <div class="ai-status" id="aiStatus" role="status" aria-live="polite"></div>
         </section>
